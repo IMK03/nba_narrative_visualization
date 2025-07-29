@@ -26,17 +26,15 @@ d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     }
   );
 
-  console.log(nested);
-
   // Format data: [{ pos: "PG", values: [{ season, avg }, ...] }, ...]
   const posLines = corePositions.map(pos => {
     return {
       pos,
-      values: nested.map(([season, posMap]) => {
-        const avg = posMap instanceof Map ? posMap.get(pos) : posMap[pos];
+      values: nested.map(([season, posArray]) => {
+        const avg = posArray.find(([p]) => p === pos)?.[1] ?? 0;
         return {
           season,
-          avg: avg ?? 0
+          avg
         };
       }).sort((a, b) => a.season - b.season)
     };
