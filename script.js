@@ -26,6 +26,8 @@ d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     }
   );
 
+  console.log(nested);
+
   // Format data: [{ pos: "PG", values: [{ season, avg }, ...] }, ...]
   const posLines = corePositions.map(pos => {
     return {
