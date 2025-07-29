@@ -1,36 +1,44 @@
 d3.csv("data/Player Per Game Adjusted.csv").then(data => {
+  // Parse numbers
   data.forEach(d => {
     d.season = +d.season;
     d.x3pa_per_game = +d.x3pa_per_game;
   });
 
-  // Filter to core positions only
-  const positions = ["PG", "SG", "SF", "PF", "C"];
-  const filteredData = data.filter(d => positions.includes(d.pos));
+  // Define 5 core positions
+  const corePositions = ["PG", "SG", "SF", "PF", "C"];
 
-  // Group: season → position → array of players
+  // Filter rows where pos includes one of the 5 core positions
+  const filteredData = data.filter(d =>
+    d.pos && corePositions.some(pos => d.pos.includes(pos))
+  );
+
+  // Group by season + position and calculate average 3PA
   const nested = d3.rollups(
     filteredData,
     v => d3.mean(v, d => d.x3pa_per_game),
     d => d.season,
-    d => d.pos
+    d => {
+      const match = corePositions.find(pos => d.pos.includes(pos));
+      return match ?? "Other";
+    }
   );
 
-  // Reshape into array of objects like:
-  // { pos: "PG", values: [{ season: 1980, avg: 0.4 }, ...] }
-  const posLines = positions.map(pos => {
+  // Format: [{ pos: "PG", values: [{ season, avg }, ...] }, ...]
+  const posLines = corePositions.map(pos => {
     return {
-      pos: pos,
+      pos,
       values: nested.map(([season, posMap]) => {
+        const avg = posMap instanceof Map ? posMap.get(pos) : posMap[pos];
         return {
-          season: season,
-          avg: (posMap instanceof Map ? posMap.get(pos) : posMap[pos]) ?? 0
+          season,
+          avg: avg ?? 0
         };
       }).sort((a, b) => a.season - b.season)
     };
   });
 
-  // Dimensions
+  // Set up SVG
   const width = 900;
   const height = 500;
   const margin = { top: 50, right: 100, bottom: 50, left: 60 };
@@ -40,7 +48,7 @@ d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     .attr("width", width)
     .attr("height", height);
 
-  // Scales
+  // X and Y scales
   const xScale = d3.scaleLinear()
     .domain(d3.extent(data, d => d.season))
     .range([margin.left, width - margin.right]);
@@ -51,7 +59,7 @@ d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     .range([height - margin.bottom, margin.top]);
 
   const color = d3.scaleOrdinal()
-    .domain(positions)
+    .domain(corePositions)
     .range(d3.schemeSet1);
 
   // Line generator
@@ -59,21 +67,20 @@ d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     .x(d => xScale(d.season))
     .y(d => yScale(d.avg));
 
-  // Draw each position line
+  // Draw lines
   posLines.forEach(lineData => {
     svg.append("path")
       .datum(lineData.values)
       .attr("fill", "none")
       .attr("stroke", color(lineData.pos))
-      .attr("stroke-width", 2)
+      .attr("stroke-width", 2.5)
       .attr("d", line);
 
-    // Add label at end
+    // Label at end of line
     const last = lineData.values[lineData.values.length - 1];
     svg.append("text")
       .attr("x", xScale(last.season) + 5)
       .attr("y", yScale(last.avg))
-      .attr("dy", "0.35em")
       .style("fill", color(lineData.pos))
       .style("font-size", "12px")
       .text(lineData.pos);
