@@ -1,0 +1,12 @@
+body {
+  font-family: sans-serif;
+  margin: 40px;
+  background: #f8f9fa;
+}
+h1 {
+  text-align: center;
+}
+#viz-container {
+  width: 90%;
+  margin: auto;
+}
