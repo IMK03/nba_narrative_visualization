@@ -24,12 +24,12 @@ function showScene(sceneNum) {
 
   if (sceneNum === 1) {
     drawScene1ChartA();
-    d3.select("#scene-text").text("3PA per game has increased across all five positions, especially among bigs (PF/C).”);
+    d3.select("#scene-text").text("3PA per game has increased across all five positions, especially among bigs (PF/C).");
   }
 
   if (sceneNum === 2) {
     drawScene1ChartB();
-    d3.select("#scene-text").text("Guards and forwards still lead in 3PA, but bigs are rapidly catching up. Everyone shoots now.”);
+    d3.select("#scene-text").text("Guards and forwards still lead in 3PA, but bigs are rapidly catching up. Everyone shoots now.");
   }
 
   if (sceneNum === 3) {
