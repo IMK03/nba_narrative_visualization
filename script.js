@@ -29,7 +29,9 @@ d3.csv("data/Player Per Game Adjusted.csv").then(data => {
   );
 
   // Format data: [{ pos: "PG", values: [{ season, avg }, ...] }, ...]
-  const posLines = groupPositions.map(pos => {
+  const allPositions = [...corePositions, ...groupPositions];
+
+  const posLines = allPositions.map(pos => {
   return {
     pos,
     values: d3.range(1980, 2025).map(season => {
@@ -75,7 +77,7 @@ d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     .range([height - margin.bottom, margin.top]);
 
   const color = d3.scaleOrdinal()
-  .domain(groupPositions)
+  .domain(allPositions)
   .range(d3.schemeSet2.concat(d3.schemeSet1));  // 8+ colors
 
 
