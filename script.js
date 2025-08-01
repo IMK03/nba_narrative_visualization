@@ -1,6 +1,8 @@
 d3.csv("data/Player Per Game Adjusted.csv").then(data => {
   // Core positions to track
   const corePositions = ["PG", "SG", "SF", "PF", "C"];
+  const groupPositions = ["G", "F", "All"];
+
 
   // Clean and parse data
   data.forEach(d => {
@@ -27,18 +29,30 @@ d3.csv("data/Player Per Game Adjusted.csv").then(data => {
   );
 
   // Format data: [{ pos: "PG", values: [{ season, avg }, ...] }, ...]
-  const posLines = corePositions.map(pos => {
-    return {
-      pos,
-      values: nested.map(([season, posArray]) => {
-        const avg = posArray.find(([p]) => p === pos)?.[1] ?? 0;
-        return {
-          season,
-          avg
-        };
-      }).sort((a, b) => a.season - b.season)
-    };
-  });
+  const posLines = groupPositions.map(pos => {
+  return {
+    pos,
+    values: d3.range(1980, 2025).map(season => {
+      
+      let seasonPlayers = filteredData.filter(d => d.season === season);
+
+      if (corePositions.includes(pos)) {
+        seasonPlayers = seasonPlayers.filter(d => d.pos.includes(pos));
+      } else if (pos === "G") {
+        seasonPlayers = seasonPlayers.filter(d => d.pos.includes("PG") || d.pos.includes("SG"));
+      } else if (pos === "F") {
+        seasonPlayers = seasonPlayers.filter(d => d.pos.includes("SF") || d.pos.includes("PF"));
+      }
+      
+
+      return {
+        season: season,
+        avg: d3.mean(seasonPlayers, d => d.x3pa_per_game) ?? 0
+      };
+    })
+  };
+});
+
 
   // Dimensions
   const width = 900;
@@ -61,8 +75,9 @@ d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     .range([height - margin.bottom, margin.top]);
 
   const color = d3.scaleOrdinal()
-    .domain(corePositions)
-    .range(d3.schemeSet1);
+  .domain(groupPositions)
+  .range(d3.schemeSet2.concat(d3.schemeSet1));  // 8+ colors
+
 
   const line = d3.line()
     .x(d => xScale(d.season))
