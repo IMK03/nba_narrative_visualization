@@ -458,7 +458,7 @@ function drawAdvancedStatConvergence(data) {
       .attr("y", margin.top / 2)
       .attr("text-anchor", "middle")
       .style("font-size", "16px")
-      .text(stat.toUpperCase() + " by Position Over Time");
+      .text(stat + " by Position Over Time");
   });
 }
 
