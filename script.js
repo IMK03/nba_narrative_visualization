@@ -38,6 +38,69 @@ function showScene(sceneNum) {
   }
 }
 
+function drawScene1ChartA() {
+  d3.csv("data/Player Per Game Adjusted.csv").then(data => {
+    const positions = ["PG", "SG", "SF", "PF", "C"];
+    data.forEach(d => {
+      d.season = +d.season;
+      d.x3pa_per_game = +d.x3pa_per_game;
+    });
+
+    const filtered = data.filter(d =>
+      d.pos && !isNaN(d.x3pa_per_game) &&
+      positions.some(pos => d.pos.includes(pos))
+    );
+
+    const lines = positions.map(pos => ({
+      pos,
+      values: d3.range(1980, 2025).map(season => {
+        const group = filtered.filter(d => d.season === season && d.pos.includes(pos));
+        return {
+          season,
+          avg: d3.mean(group, d => d.x3pa_per_game) ?? 0
+        };
+      })
+    }));
+
+    drawLineChart(lines, positions, "Average 3PA per Game by Position (≥ 12 MPG)");
+  });
+}
+
+function drawScene1ChartB() {
+  d3.csv("data/Player Per Game Adjusted.csv").then(data => {
+    const roles = ["G", "F", "Big", "All"];
+    data.forEach(d => {
+      d.season = +d.season;
+      d.x3pa_per_game = +d.x3pa_per_game;
+    });
+
+    const filtered = data.filter(d => d.pos && !isNaN(d.x3pa_per_game));
+
+    const lines = roles.map(role => ({
+      pos: role,
+      values: d3.range(1980, 2025).map(season => {
+        let group = filtered.filter(d => d.season === season);
+
+        if (role === "G") {
+          group = group.filter(d => d.pos.includes("PG") || d.pos.includes("SG"));
+        } else if (role === "F") {
+          group = group.filter(d => d.pos.includes("SF") || d.pos.includes("PF"));
+        } else if (role === "Big") {
+          group = group.filter(d => d.pos.includes("PF") || d.pos.includes("C"));
+        }
+
+        return {
+          season,
+          avg: d3.mean(group, d => d.x3pa_per_game) ?? 0
+        };
+      })
+    }));
+
+    drawLineChart(lines, roles, "Grouped 3PA Trends: Guards, Forwards, Bigs");
+  });
+}
+
+
 function drawScene1ChartC() {
   d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     data.forEach(d => {
