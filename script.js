@@ -467,7 +467,6 @@ function drawScene2ChartB() {
     data.forEach(d => {
       d.year = +d.year;
       d.value = +d.value;
-      d.stat = +d.stat
     });
     drawAdvancedStatConvergence(data);
   });
