@@ -45,6 +45,7 @@ function showScene(sceneNum) {
   if (sceneNum === 5) {
     drawScene2ChartB();
     d3.select("#scene-text").text("Roles are blending: guards rebound, bigs assist, and everyone uses possessions. Stats are converging.");
+  }
   if (sceneNum === 6) {
     drawScene2ChartC();
     d3.select("#scene-text").text("Pace-and-space revolution: faster play, more threes.");
