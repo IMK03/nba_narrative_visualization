@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
   showScene(currentScene);
 
   d3.select("#next").on("click", () => {
-    if (currentScene < 3) {
+    if (currentScene < 5) {
       currentScene++;
       showScene(currentScene);
     }
@@ -41,9 +41,14 @@ function showScene(sceneNum) {
     drawScene2ChartA();
     d3.select("#scene-text").text("Players are playing more positions over time — the era of positionless basketball is here.");
   }
+
+  if (sceneNum === 5) {
+    drawScene2ChartB();
+    d3.select("#scene-text").text("Roles are blending: guards rebound, bigs assist, and everyone uses possessions. Stats are converging.");
+  }
 }
 
-
+// Scene 1 Chart A
 function drawScene1ChartA() {
   d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     const positions = ["PG", "SG", "SF", "PF", "C"];
@@ -72,6 +77,7 @@ function drawScene1ChartA() {
   });
 }
 
+// Scene 1 Chart B
 function drawScene1ChartB() {
   d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     const roles = ["G", "F", "Big"];
@@ -106,13 +112,14 @@ function drawScene1ChartB() {
   });
 }
 
-
+// Scene 1 Chart C (Annotated)
 function drawScene1ChartC() {
   d3.csv("data/Player Per Game Adjusted.csv").then(data => {
     data.forEach(d => {
       d.season = +d.season;
       d.x3pa_per_game = +d.x3pa_per_game;
     });
+
     const filtered = data.filter(d => !isNaN(d.x3pa_per_game));
 
     const lineData = {
@@ -127,6 +134,7 @@ function drawScene1ChartC() {
   });
 }
 
+// Shared line chart function
 function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
   const width = 900, height = 500;
   const margin = { top: 50, right: 100, bottom: 50, left: 60 };
@@ -223,6 +231,7 @@ function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
   }
 }
 
+// Scene 2 Chart A
 function drawScene2ChartA() {
   d3.csv("data/Player Play By Play.csv").then(data => {
     data.forEach(d => {
@@ -234,14 +243,13 @@ function drawScene2ChartA() {
       d.c_percent = +d.c_percent;
     });
 
-    // Only seasons from 1997 to 2025 as that's the available range
     const years = d3.range(1997, 2026);
 
     const seasonAverages = years.map(season => {
       const players = data.filter(d => d.season === season);
       const fluidityPerPlayer = players.map(d => {
         const positions = [d.pg_percent, d.sg_percent, d.sf_percent, d.pf_percent, d.c_percent];
-        return positions.filter(p => p >= 0.1).length; // Number of roles with ≥10%
+        return positions.filter(p => p >= 0.1).length;
       });
       return {
         season,
@@ -249,7 +257,107 @@ function drawScene2ChartA() {
       };
     });
 
-    // Reuse the generic chart function
-    drawLineChart([{ pos: "Position Fluidity", values: seasonAverages }], ["Position Fluidity"], "Avg # of Positions Played per Player (≥10% share)", false);
+    drawLineChart(
+      [{ pos: "Position Fluidity", values: seasonAverages }],
+      ["Position Fluidity"],
+      "Avg # of Positions Played per Player (≥10% share)"
+    );
+  });
+}
+
+// Scene 2 Chart B
+function drawScene2ChartB() {
+  const width = 900, height = 500;
+  const margin = { top: 50, right: 100, bottom: 50, left: 60 };
+
+  const svg = d3.select("#viz-container")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  const g = svg.append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  d3.csv("data/Scene2_ChartB_Stddev_by_Season.csv").then(data => {
+    data.forEach(d => {
+      d.season = +d.season;
+      d.stddev = +d.stddev;
+    });
+
+    const stats = Array.from(d3.group(data, d => d.stat), ([key, values]) => ({
+      stat: key,
+      values
+    }));
+
+    const x = d3.scaleLinear()
+      .domain(d3.extent(data, d => d.season))
+      .range([0, width - margin.left - margin.right]);
+
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.stddev)]).nice()
+      .range([height - margin.top - margin.bottom, 0]);
+
+    const color = d3.scaleOrdinal()
+      .domain(stats.map(d => d.stat))
+      .range(["#1f77b4", "#ff7f0e", "#2ca02c"]);
+
+    g.append("g")
+      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+      .call(d3.axisBottom(x).tickFormat(d3.format("d")));
+
+    g.append("g")
+      .call(d3.axisLeft(y));
+
+    const line = d3.line()
+      .x(d => x(d.season))
+      .y(d => y(d.stddev));
+
+    g.selectAll(".line")
+      .data(stats)
+      .join("path")
+      .attr("class", "line")
+      .attr("fill", "none")
+      .attr("stroke-width", 2.5)
+      .attr("stroke", d => color(d.stat))
+      .attr("d", d => line(d.values));
+
+    const legend = g.selectAll(".legend")
+      .data(stats)
+      .join("g")
+      .attr("class", "legend")
+      .attr("transform", (d, i) => `translate(${width - margin.left - margin.right - 150},${i * 25})`);
+
+    legend.append("rect")
+      .attr("width", 15)
+      .attr("height", 15)
+      .attr("fill", d => color(d.stat));
+
+    legend.append("text")
+      .attr("x", 20)
+      .attr("y", 12)
+      .text(d => d.stat);
+
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", 30)
+      .attr("text-anchor", "middle")
+      .style("font-size", "18px")
+      .style("font-weight", "bold")
+      .text("Convergence of Advanced Stats Across Positions");
+
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height - 10)
+      .attr("text-anchor", "middle")
+      .style("font-size", "12px")
+      .text("Season");
+
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -height / 2)
+      .attr("y", 15)
+      .style("text-anchor", "middle")
+      .style("font-size", "12px")
+      .text("Standard Deviation");
   });
 }
