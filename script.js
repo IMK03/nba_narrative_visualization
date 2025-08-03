@@ -233,34 +233,34 @@ function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
 
 // Scene 2 Chart A
 function drawScene2ChartA() {
-  d3.csv("data/Player Play By Play.csv").then(data => {
+  d3.csv("data/Position Fluidity.csv").then(data => {
     data.forEach(d => {
       d.season = +d.season;
-      d.pg_percent = +d.pg_percent;
-      d.sg_percent = +d.sg_percent;
-      d.sf_percent = +d.sf_percent;
-      d.pf_percent = +d.pf_percent;
-      d.c_percent = +d.c_percent;
+      d.avg_positions = +d.avg_positions;
+      d.multi_pos_share = +d.multi_pos_share;
     });
 
-    const years = d3.range(1997, 2026);
-
-    const seasonAverages = years.map(season => {
-      const players = data.filter(d => d.season === season);
-      const fluidityPerPlayer = players.map(d => {
-        const positions = [d.pg_percent, d.sg_percent, d.sf_percent, d.pf_percent, d.c_percent];
-        return positions.filter(p => p >= 0.1).length;
-      });
-      return {
-        season,
-        avg: d3.mean(fluidityPerPlayer) ?? 0
-      };
-    });
+    const lines = [
+      {
+        pos: "Avg Positions (≥10%)",
+        values: data.map(d => ({
+          season: d.season,
+          avg: d.avg_positions
+        }))
+      },
+      {
+        pos: "Share with >1 Position",
+        values: data.map(d => ({
+          season: d.season,
+          avg: d.multi_pos_share * 100
+        }))
+      }
+    ];
 
     drawLineChart(
-      [{ pos: "Position Fluidity", values: seasonAverages }],
-      ["Position Fluidity"],
-      "Avg # of Positions Played per Player (≥10% share)"
+      lines,
+      ["Avg Positions (≥10%)", "Share with >1 Position"],
+      "Position Fluidity: Avg # of Positions & Share of Multi-Position Players"
     );
   });
 }
