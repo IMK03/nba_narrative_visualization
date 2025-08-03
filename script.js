@@ -463,7 +463,7 @@ function drawAdvancedStatConvergence(data) {
 }
 
 function drawScene2ChartB() {
-  d3.csv("data/advanced filter.csv").then(data => {
+  d3.csv("data/advanced filtered.csv").then(data => {
     data.forEach(d => {
       d.year = +d.year;
       d.value = +d.value;
