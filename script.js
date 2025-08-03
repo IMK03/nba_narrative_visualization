@@ -463,10 +463,11 @@ function drawAdvancedStatConvergence(data) {
 }
 
 function drawScene2ChartB() {
-  d3.csv("data/cleaned_advanced_long.csv").then(data => {
+  d3.csv("data/advanced filter.csv").then(data => {
     data.forEach(d => {
       d.year = +d.year;
       d.value = +d.value;
+      d.stat = +d.stat
     });
     drawAdvancedStatConvergence(data);
   });
