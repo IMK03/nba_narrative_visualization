@@ -231,87 +231,108 @@ function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
   }
 }
 
-// New line chart function with options (for custom y-axis, labels, domains, etc.)
-function drawLineChart2(lines, domainLabels, chartTitle, options = {}) {
-  const width = 900, height = 500;
-  const margin = { top: 50, right: 120, bottom: 50, left: 60 };
+function drawLineChart2(data) {
+  // Filter data to 1997 and beyond
+  const filteredData = data.filter(d => d.year >= 1997);
 
-  const svg = d3.select("#viz-container")
+  // Convert fields to numbers
+  filteredData.forEach(d => {
+    d.year = +d.year;
+    d.avg_pos = +d.avg_pos;
+    d.sd_pos = +d.sd_pos;
+  });
+
+  // Set up dimensions
+  const width = 800;
+  const height = 400;
+  const margin = { top: 50, right: 100, bottom: 50, left: 60 };
+
+  // Remove previous chart if it exists
+  d3.select("#chart2").selectAll("*").remove();
+
+  const svg = d3.select("#chart2")
     .append("svg")
     .attr("width", width)
     .attr("height", height);
 
-  const xDomain = options.xDomain || [1980, 2025];
-  const yDomain = options.yDomain || [
-    0,
-    d3.max(lines.flatMap(l => l.values.map(v => v.avg)))
-  ];
-  const yLabel = options.yLabel || "Value";
-
+  // X scale (year)
   const xScale = d3.scaleLinear()
-    .domain(xDomain)
+    .domain([1997, d3.max(filteredData, d => d.year)])
     .range([margin.left, width - margin.right]);
 
+  // Y scale (position range: 1 to 5 or adjust based on data range)
+  const yMin = d3.min(filteredData, d => Math.min(d.avg_pos, d.sd_pos));
+  const yMax = d3.max(filteredData, d => Math.max(d.avg_pos, d.sd_pos));
   const yScale = d3.scaleLinear()
-    .domain(yDomain)
-    .nice()
+    .domain([Math.floor(yMin) - 0.5, Math.ceil(yMax) + 0.5])
     .range([height - margin.bottom, margin.top]);
 
-  const color = d3.scaleOrdinal()
-    .domain(domainLabels)
-    .range(d3.schemeSet2.concat(d3.schemeSet1));
+  // Line generators
+  const avgLine = d3.line()
+    .x(d => xScale(d.year))
+    .y(d => yScale(d.avg_pos));
 
-  const line = d3.line()
-    .x(d => xScale(d.season))
-    .y(d => yScale(d.avg));
+  const sdLine = d3.line()
+    .x(d => xScale(d.year))
+    .y(d => yScale(d.sd_pos));
 
-  lines.forEach(lineData => {
-    svg.append("path")
-      .datum(lineData.values)
-      .attr("fill", "none")
-      .attr("stroke", color(lineData.pos))
-      .attr("stroke-width", 2.5)
-      .attr("d", line);
+  // Draw average position line
+  svg.append("path")
+    .datum(filteredData)
+    .attr("fill", "none")
+    .attr("stroke", "steelblue")
+    .attr("stroke-width", 2)
+    .attr("d", avgLine);
 
-    const last = lineData.values[lineData.values.length - 1];
-    svg.append("text")
-      .attr("x", xScale(last.season) + 5)
-      .attr("y", yScale(last.avg))
-      .style("fill", color(lineData.pos))
-      .style("font-size", "12px")
-      .text(lineData.pos);
-  });
+  // Draw standard deviation line
+  svg.append("path")
+    .datum(filteredData)
+    .attr("fill", "none")
+    .attr("stroke", "tomato")
+    .attr("stroke-width", 2)
+    .attr("d", sdLine);
+
+  // Axes
+  const xAxis = d3.axisBottom(xScale).tickFormat(d3.format("d"));
+  const yAxis = d3.axisLeft(yScale);
 
   svg.append("g")
     .attr("transform", `translate(0,${height - margin.bottom})`)
-    .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
+    .call(xAxis);
 
   svg.append("g")
     .attr("transform", `translate(${margin.left},0)`)
-    .call(d3.axisLeft(yScale));
+    .call(yAxis);
 
-  svg.append("text")
-    .attr("x", width / 2)
-    .attr("y", margin.top / 2)
-    .attr("text-anchor", "middle")
-    .style("font-size", "18px")
-    .style("font-weight", "bold")
-    .text(chartTitle);
-
+  // Axis labels
   svg.append("text")
     .attr("x", width / 2)
     .attr("y", height - 10)
     .attr("text-anchor", "middle")
-    .style("font-size", "12px")
-    .text("Season");
+    .text("Year");
 
   svg.append("text")
-    .attr("transform", "rotate(-90)")
     .attr("x", -height / 2)
     .attr("y", 15)
-    .style("text-anchor", "middle")
-    .style("font-size", "12px")
-    .text(yLabel);
+    .attr("transform", "rotate(-90)")
+    .attr("text-anchor", "middle")
+    .text("Position Metric");
+
+  // Legend
+  const legend = svg.append("g")
+    .attr("transform", `translate(${width - margin.right + 20},${margin.top})`);
+
+  legend.append("rect")
+    .attr("x", 0).attr("y", 0).attr("width", 15).attr("height", 15)
+    .attr("fill", "steelblue");
+  legend.append("text")
+    .attr("x", 20).attr("y", 12).text("Avg. Position");
+
+  legend.append("rect")
+    .attr("x", 0).attr("y", 25).attr("width", 15).attr("height", 15)
+    .attr("fill", "tomato");
+  legend.append("text")
+    .attr("x", 20).attr("y", 37).text("Position SD");
 }
 
 // Scene 2 Chart A (use drawLineChart2 with custom y-axis scale & label)
