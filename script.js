@@ -278,7 +278,7 @@ function drawScene2ChartB() {
   const g = svg.append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  d3.csv("data/Scene2_ChartB_Stddev_by_Season.csv").then(data => {
+  d3.csv("data/advanced filtered.csv").then(data => {
     data.forEach(d => {
       d.season = +d.season;
       d.stddev = +d.stddev;
