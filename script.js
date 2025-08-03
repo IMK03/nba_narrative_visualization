@@ -390,9 +390,9 @@ function drawLineChart2(data) {
 function drawScene2ChartA() {
   d3.csv("data/Position Fluidity.csv").then(data => {
   data.forEach(d => {
-    d.year = +d.year;
-    d.avg_pos = +d.avg_pos;
-    d.sd_pos = +d.sd_pos;
+    d.year = +d.season;  // 👈 use season for the x-axis
+    d.avg_pos = +d.avg_positions;  // 👈 match CSV column
+    d.sd_pos = +d.multi_pos_share;  // 👈 use correct field
   });
   console.log("Scene 2A data:", data);  
   const cleaned = data.filter(d =>
