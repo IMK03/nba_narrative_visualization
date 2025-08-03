@@ -476,9 +476,11 @@ function drawScene2ChartB() {
       d.year = +d.year;
       d.value = +d.value;
     });
+    console.log("Scene 2B data:", data);
     const cleaned = data.filter(d =>
     d.stat && d.pos && !isNaN(d.year) && !isNaN(d.value)
     );
+    console.log("Scene 2B cleaned:", cleaned);
     drawAdvancedStatConvergence(cleaned);
   });
 }
