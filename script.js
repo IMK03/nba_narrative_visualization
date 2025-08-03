@@ -36,7 +36,13 @@ function showScene(sceneNum) {
     drawScene1ChartC();
     d3.select("#scene-text").text("League-wide shift: Annotated tipping points in 3-point revolution.");
   }
+
+  if (sceneNum === 4) {
+    drawScene2ChartA();
+    d3.select("#scene-text").text("Players are playing more positions over time — the era of positionless basketball is here.");
+  }
 }
+
 
 function drawScene1ChartA() {
   d3.csv("data/Player Per Game Adjusted.csv").then(data => {
@@ -215,4 +221,35 @@ function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
     const makeAnnotations = d3.annotation().annotations(annotations);
     svg.append("g").attr("class", "annotation-group").call(makeAnnotations);
   }
+}
+
+function drawScene2ChartA() {
+  d3.csv("data/Player Play By Play.csv").then(data => {
+    data.forEach(d => {
+      d.season = +d.season;
+      d.pg_percent = +d.pg_percent;
+      d.sg_percent = +d.sg_percent;
+      d.sf_percent = +d.sf_percent;
+      d.pf_percent = +d.pf_percent;
+      d.c_percent = +d.c_percent;
+    });
+
+    // Only seasons from 1997 to 2025 as that's the available range
+    const years = d3.range(1997, 2026);
+
+    const seasonAverages = years.map(season => {
+      const players = data.filter(d => d.season === season);
+      const fluidityPerPlayer = players.map(d => {
+        const positions = [d.pg_percent, d.sg_percent, d.sf_percent, d.pf_percent, d.c_percent];
+        return positions.filter(p => p >= 0.1).length; // Number of roles with ≥10%
+      });
+      return {
+        season,
+        avg: d3.mean(fluidityPerPlayer) ?? 0
+      };
+    });
+
+    // Reuse the generic chart function
+    drawLineChart([{ pos: "Position Fluidity", values: seasonAverages }], ["Position Fluidity"], "Avg # of Positions Played per Player (≥10% share)", false);
+  });
 }
