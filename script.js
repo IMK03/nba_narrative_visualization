@@ -178,53 +178,6 @@ function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
       .text(lineData.pos);
   });
 
-  function drawLineChart2(lines, domainLabels, chartTitle, options = {}) {
-  const width = 900, height = 500;
-  const margin = { top: 50, right: 100, bottom: 50, left: 60 };
-
-  const svg = d3.select("#viz-container")
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height);
-
-  const xDomain = options.xDomain || [1980, 2025];
-  const xScale = d3.scaleLinear()
-    .domain(xDomain)
-    .range([margin.left, width - margin.right]);
-
-  const yMin = options.yMin ?? 0;
-  const yMax = options.yMax ?? d3.max(lines.flatMap(d => d.values.map(v => v.avg)));
-  const yLabel = options.yLabel || "Value";
-
-  const yScale = d3.scaleLinear()
-    .domain([yMin, yMax])
-    .nice()
-    .range([height - margin.bottom, margin.top]);
-
-  const color = d3.scaleOrdinal()
-    .domain(domainLabels)
-    .range(d3.schemeSet2.concat(d3.schemeSet1));
-
-  const line = d3.line()
-    .x(d => xScale(d.season))
-    .y(d => yScale(d.avg));
-
-  lines.forEach(lineData => {
-    svg.append("path")
-      .datum(lineData.values)
-      .attr("fill", "none")
-      .attr("stroke", color(lineData.pos))
-      .attr("stroke-width", 2.5)
-      .attr("d", line);
-
-    const last = lineData.values[lineData.values.length - 1];
-    svg.append("text")
-      .attr("x", xScale(last.season) + 5)
-      .attr("y", yScale(last.avg))
-      .style("fill", color(lineData.pos))
-      .style("font-size", "12px")
-      .text(lineData.pos);
-  });
 
   svg.append("g")
     .attr("transform", `translate(0, ${height - margin.bottom})`)
@@ -339,7 +292,7 @@ function drawScene2ChartA() {
       }
     ];
 
-    drawLineChart2(
+    drawLineChart(
       lines,
       ["Avg Positions (≥10%)", "Share with >1 Position"],
       "Position Fluidity: Avg # of Positions & Share of Multi-Position Players"
