@@ -53,7 +53,7 @@ function drawScene1ChartA() {
 
     const lines = positions.map(pos => ({
       pos,
-      values: d3.range(1980, 2025).map(season => {
+      values: d3.range(1980, 2026).map(season => {
         const group = filtered.filter(d => d.season === season && d.pos.includes(pos));
         return {
           season,
@@ -78,7 +78,7 @@ function drawScene1ChartB() {
 
     const lines = roles.map(role => ({
       pos: role,
-      values: d3.range(1980, 2025).map(season => {
+      values: d3.range(1980, 2026).map(season => {
         let group = filtered.filter(d => d.season === season);
 
         if (role === "G") {
@@ -111,7 +111,7 @@ function drawScene1ChartC() {
 
     const lineData = {
       pos: "All",
-      values: d3.range(1980, 2025).map(season => ({
+      values: d3.range(1980, 2026).map(season => ({
         season,
         avg: d3.mean(filtered.filter(d => d.season === season), d => d.x3pa_per_game) ?? 0
       }))
@@ -131,7 +131,7 @@ function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
     .attr("height", height);
 
   const xScale = d3.scaleLinear()
-    .domain([1980, 2024])
+    .domain([1980, 2025])
     .range([margin.left, width - margin.right]);
 
   const yScale = d3.scaleLinear()
