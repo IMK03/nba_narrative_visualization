@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
   showScene(currentScene);
 
   d3.select("#next").on("click", () => {
-    if (currentScene < 5) {
+    if (currentScene < 6) {
       currentScene++;
       showScene(currentScene);
     }
