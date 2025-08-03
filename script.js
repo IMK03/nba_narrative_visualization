@@ -392,7 +392,11 @@ function drawScene2ChartA() {
     d.avg_pos = +d.avg_pos;
     d.sd_pos = +d.sd_pos;
   });
-  drawPosFluidityChart(data);
+  const cleaned = data.filter(d =>
+  !isNaN(d.year) && !isNaN(d.avg_pos) && !isNaN(d.sd_pos)
+  );
+  drawPosFluidityChart(cleaned);
+
 });
 
 }
@@ -468,7 +472,10 @@ function drawScene2ChartB() {
       d.year = +d.year;
       d.value = +d.value;
     });
-    drawAdvancedStatConvergence(data);
+    const cleaned = data.filter(d =>
+    d.stat && d.pos && !isNaN(d.year) && !isNaN(d.value)
+    );
+    drawAdvancedStatConvergence(cleaned);
   });
 }
 
