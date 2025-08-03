@@ -397,105 +397,81 @@ function drawScene2ChartA() {
 
 }
 
-// Scene 2 Chart B
-function drawScene2ChartB() {
+function drawAdvancedStatConvergence(data) {
   const width = 900, height = 500;
   const margin = { top: 50, right: 100, bottom: 50, left: 60 };
 
-  const svg = d3.select("#viz-container")
-    .append("svg")
+  const svg = d3.select("#viz-container").append("svg")
     .attr("width", width)
     .attr("height", height);
 
-  const g = svg.append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
+  // Get unique stats
+  const stats = Array.from(new Set(data.map(d => d.stat)));
+  
+  // One chart per stat
+  stats.forEach((stat, i) => {
+    const statData = data.filter(d => d.stat === stat);
 
-  d3.csv("data/advanced filtered.csv").then(data => {
-    data.forEach(d => {
-      d.season = +d.season;
-      d.stddev = +d.stddev;
-    });
+    const xScale = d3.scaleLinear()
+      .domain(d3.extent(statData, d => d.year))
+      .range([margin.left, width - margin.right]);
 
-    const validData = data.filter(d => !isNaN(d.season) && !isNaN(d.stddev));
+    const yScale = d3.scaleLinear()
+      .domain(d3.extent(statData, d => +d.value))
+      .nice()
+      .range([height - margin.bottom, margin.top]);
 
-
-    const stats = Array.from(d3.group(validData, d => d.stat), ([key, values]) => ({
-      stat: key,
-      values
-    }));
-
-    const x = d3.scaleLinear()
-      .domain(d3.extent(validData, d => d.season))
-      .range([0, width - margin.left - margin.right]);
-
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(validData, d => d.stddev)]).nice()
-      .range([height - margin.top - margin.bottom, 0]);
-
-    const color = d3.scaleOrdinal()
-      .domain(stats.map(d => d.stat))
-      .range(["#1f77b4", "#ff7f0e", "#2ca02c"]);
-
-    g.append("g")
-      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-      .call(d3.axisBottom(x).tickFormat(d3.format("d")));
-
-    g.append("g")
-      .call(d3.axisLeft(y));
+    const color = d3.scaleOrdinal(d3.schemeTableau10)
+      .domain(Array.from(new Set(statData.map(d => d.pos))));
 
     const line = d3.line()
-      .x(d => x(d.season))
-      .y(d => y(d.stddev));
+      .x(d => xScale(d.year))
+      .y(d => yScale(d.value));
 
-    g.selectAll(".line")
-      .data(stats)
-      .join("path")
-      .attr("class", "line")
-      .attr("fill", "none")
-      .attr("stroke-width", 2.5)
-      .attr("stroke", d => color(d.stat))
-      .attr("d", d => line(d.values));
+    const group = svg.append("g")
+      .attr("transform", `translate(0, ${i * height})`);
 
-    const legend = g.selectAll(".legend")
-      .data(stats)
-      .join("g")
-      .attr("class", "legend")
-      .attr("transform", (d, i) => `translate(${width - margin.left - margin.right - 150},${i * 25})`);
+    const statGroup = group.append("g");
 
-    legend.append("rect")
-      .attr("width", 15)
-      .attr("height", 15)
-      .attr("fill", d => color(d.stat));
+    const positions = d3.group(statData, d => d.pos);
+    positions.forEach((values, pos) => {
+      statGroup.append("path")
+        .datum(values)
+        .attr("fill", "none")
+        .attr("stroke", color(pos))
+        .attr("stroke-width", 2)
+        .attr("d", line);
+    });
 
-    legend.append("text")
-      .attr("x", 20)
-      .attr("y", 12)
-      .text(d => d.stat);
+    // Axes
+    statGroup.append("g")
+      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
 
-    svg.append("text")
+    statGroup.append("g")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(d3.axisLeft(yScale));
+
+    // Label
+    statGroup.append("text")
       .attr("x", width / 2)
-      .attr("y", 30)
+      .attr("y", margin.top / 2)
       .attr("text-anchor", "middle")
-      .style("font-size", "18px")
-      .style("font-weight", "bold")
-      .text("Convergence of Advanced Stats Across Positions");
-
-    svg.append("text")
-      .attr("x", width / 2)
-      .attr("y", height - 10)
-      .attr("text-anchor", "middle")
-      .style("font-size", "12px")
-      .text("Season");
-
-    svg.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -height / 2)
-      .attr("y", 15)
-      .style("text-anchor", "middle")
-      .style("font-size", "12px")
-      .text("Standard Deviation");
+      .style("font-size", "16px")
+      .text(stat.toUpperCase() + " by Position Over Time");
   });
 }
+
+function drawScene2ChartB() {
+  d3.csv("data/cleaned_advanced_long.csv").then(data => {
+    data.forEach(d => {
+      d.year = +d.year;
+      d.value = +d.value;
+    });
+    drawAdvancedStatConvergence(data);
+  });
+}
+
 
 function drawScene2ChartC() {
   const svgC = d3.select("#viz-container").append("svg")
