@@ -246,6 +246,8 @@ function drawLineChart2(data) {
     d.sd_pos = +d.sd_pos;
   });
 
+  
+
   // Set up dimensions
   const width = 800;
   const height = 400;
@@ -392,9 +394,11 @@ function drawScene2ChartA() {
     d.avg_pos = +d.avg_pos;
     d.sd_pos = +d.sd_pos;
   });
+  console.log("Scene 2A data:", data);  
   const cleaned = data.filter(d =>
   !isNaN(d.year) && !isNaN(d.avg_pos) && !isNaN(d.sd_pos)
   );
+  console.log("Scene 2A cleaned:", cleaned);  
   drawPosFluidityChart(cleaned);
 
 });
