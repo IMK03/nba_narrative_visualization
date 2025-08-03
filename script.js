@@ -46,6 +46,11 @@ function showScene(sceneNum) {
     drawScene2ChartB();
     d3.select("#scene-text").text("Roles are blending: guards rebound, bigs assist, and everyone uses possessions. Stats are converging.");
   }
+  if (sceneNum === 6) {
+    d3.select("#chart-c").style("display", "block");
+} else {
+    d3.select("#chart-c").style("display", "none");
+}
 }
 
 // Scene 1 Chart A
@@ -361,15 +366,8 @@ function drawScene2ChartA() {
       }
     ];
 
-    drawLineChart2(
-      lines,
-      ["Avg Positions (≥10%)", "Share with >1 Position"],
-      "Position Fluidity: Avg # of Positions & Share of Multi-Position Players",
-      {
-        yDomain: [0, 2.5], // for example, or adjust as needed
-        yLabel: "Positions / Percentage"
-      }
-    );
+    // Call the dedicated custom function for avg_pos and sd_pos
+  drawPosFluidityChart(data);
   });
 }
 
@@ -392,17 +390,20 @@ function drawScene2ChartB() {
       d.stddev = +d.stddev;
     });
 
-    const stats = Array.from(d3.group(data, d => d.stat), ([key, values]) => ({
+    const validData = data.filter(d => !isNaN(d.season) && !isNaN(d.stddev));
+
+
+    const stats = Array.from(d3.group(validData, d => d.stat), ([key, values]) => ({
       stat: key,
       values
     }));
 
     const x = d3.scaleLinear()
-      .domain(d3.extent(data, d => d.season))
+      .domain(d3.extent(validData, d => d.season))
       .range([0, width - margin.left - margin.right]);
 
     const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.stddev)]).nice()
+      .domain([0, d3.max(validData, d => d.stddev)]).nice()
       .range([height - margin.top - margin.bottom, 0]);
 
     const color = d3.scaleOrdinal()
@@ -471,10 +472,10 @@ function drawScene2ChartB() {
 }
 
 // Scene 2 · Chart C: Pace and 3PA per Game
-const svgC = d3.select("#chartC"),
-  marginC = { top: 50, right: 90, bottom: 50, left: 60 },
-  widthC = +svgC.attr("width") - marginC.left - marginC.right,
-  heightC = +svgC.attr("height") - marginC.top - marginC.bottom;
+const svgC = d3.select("#chart-c").append("svg")
+  .attr("width", 900)
+  .attr("height", 500);
+
 
 const gC = svgC.append("g").attr("transform", `translate(${marginC.left},${marginC.top})`);
 
