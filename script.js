@@ -68,7 +68,7 @@ function drawScene1ChartA() {
 
 function drawScene1ChartB() {
   d3.csv("data/Player Per Game Adjusted.csv").then(data => {
-    const roles = ["G", "F", "Big", "All"];
+    const roles = ["G", "F", "Big"];
     data.forEach(d => {
       d.season = +d.season;
       d.x3pa_per_game = +d.x3pa_per_game;
