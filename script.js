@@ -134,7 +134,7 @@ function drawScene1ChartC() {
   });
 }
 
-// Shared line chart function
+// Shared line chart function (for 3PA and similar)
 function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
   const width = 900, height = 500;
   const margin = { top: 50, right: 100, bottom: 50, left: 60 };
@@ -178,47 +178,12 @@ function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
       .text(lineData.pos);
   });
 
-
   svg.append("g")
-    .attr("transform", `translate(0, ${height - margin.bottom})`)
+    .attr("transform", `translate(0,${height - margin.bottom})`)
     .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
 
   svg.append("g")
-    .attr("transform", `translate(${margin.left}, 0)`)
-    .call(d3.axisLeft(yScale));
-
-  svg.append("text")
-    .attr("x", width / 2)
-    .attr("y", margin.top / 2)
-    .attr("text-anchor", "middle")
-    .style("font-size", "18px")
-    .style("font-weight", "bold")
-    .text(chartTitle);
-
-  svg.append("text")
-    .attr("x", width / 2)
-    .attr("y", height - 10)
-    .attr("text-anchor", "middle")
-    .style("font-size", "12px")
-    .text("Season");
-
-  svg.append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("x", -height / 2)
-    .attr("y", 15)
-    .style("text-anchor", "middle")
-    .style("font-size", "12px")
-    .text(yLabel);
-});
-
-  
-
-  svg.append("g")
-    .attr("transform", `translate(0, ${height - margin.bottom})`)
-    .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
-
-  svg.append("g")
-    .attr("transform", `translate(${margin.left}, 0)`)
+    .attr("transform", `translate(${margin.left},0)`)
     .call(d3.axisLeft(yScale));
 
   svg.append("text")
@@ -266,7 +231,90 @@ function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
   }
 }
 
-// Scene 2 Chart A
+// New line chart function with options (for custom y-axis, labels, domains, etc.)
+function drawLineChart2(lines, domainLabels, chartTitle, options = {}) {
+  const width = 900, height = 500;
+  const margin = { top: 50, right: 120, bottom: 50, left: 60 };
+
+  const svg = d3.select("#viz-container")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  const xDomain = options.xDomain || [1980, 2025];
+  const yDomain = options.yDomain || [
+    0,
+    d3.max(lines.flatMap(l => l.values.map(v => v.avg)))
+  ];
+  const yLabel = options.yLabel || "Value";
+
+  const xScale = d3.scaleLinear()
+    .domain(xDomain)
+    .range([margin.left, width - margin.right]);
+
+  const yScale = d3.scaleLinear()
+    .domain(yDomain)
+    .nice()
+    .range([height - margin.bottom, margin.top]);
+
+  const color = d3.scaleOrdinal()
+    .domain(domainLabels)
+    .range(d3.schemeSet2.concat(d3.schemeSet1));
+
+  const line = d3.line()
+    .x(d => xScale(d.season))
+    .y(d => yScale(d.avg));
+
+  lines.forEach(lineData => {
+    svg.append("path")
+      .datum(lineData.values)
+      .attr("fill", "none")
+      .attr("stroke", color(lineData.pos))
+      .attr("stroke-width", 2.5)
+      .attr("d", line);
+
+    const last = lineData.values[lineData.values.length - 1];
+    svg.append("text")
+      .attr("x", xScale(last.season) + 5)
+      .attr("y", yScale(last.avg))
+      .style("fill", color(lineData.pos))
+      .style("font-size", "12px")
+      .text(lineData.pos);
+  });
+
+  svg.append("g")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
+
+  svg.append("g")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(d3.axisLeft(yScale));
+
+  svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", margin.top / 2)
+    .attr("text-anchor", "middle")
+    .style("font-size", "18px")
+    .style("font-weight", "bold")
+    .text(chartTitle);
+
+  svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", height - 10)
+    .attr("text-anchor", "middle")
+    .style("font-size", "12px")
+    .text("Season");
+
+  svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height / 2)
+    .attr("y", 15)
+    .style("text-anchor", "middle")
+    .style("font-size", "12px")
+    .text(yLabel);
+}
+
+// Scene 2 Chart A (use drawLineChart2 with custom y-axis scale & label)
 function drawScene2ChartA() {
   d3.csv("data/Position Fluidity.csv").then(data => {
     data.forEach(d => {
@@ -292,10 +340,14 @@ function drawScene2ChartA() {
       }
     ];
 
-    drawLineChart(
+    drawLineChart2(
       lines,
       ["Avg Positions (≥10%)", "Share with >1 Position"],
-      "Position Fluidity: Avg # of Positions & Share of Multi-Position Players"
+      "Position Fluidity: Avg # of Positions & Share of Multi-Position Players",
+      {
+        yDomain: [0, 2.5], // for example, or adjust as needed
+        yLabel: "Positions / Percentage"
+      }
     );
   });
 }
@@ -396,3 +448,4 @@ function drawScene2ChartB() {
       .text("Standard Deviation");
   });
 }
+
