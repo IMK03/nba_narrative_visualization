@@ -470,3 +470,105 @@ function drawScene2ChartB() {
   });
 }
 
+// Scene 2 · Chart C: Pace and 3PA per Game
+const svgC = d3.select("#chartC"),
+  marginC = { top: 50, right: 90, bottom: 50, left: 60 },
+  widthC = +svgC.attr("width") - marginC.left - marginC.right,
+  heightC = +svgC.attr("height") - marginC.top - marginC.bottom;
+
+const gC = svgC.append("g").attr("transform", `translate(${marginC.left},${marginC.top})`);
+
+Promise.all([
+  d3.csv("Team Summaries.csv", d3.autoType),       // has 'Season' & 'pace'
+  d3.csv("Team Stats Per Game.csv", d3.autoType)    // has 'Season' & 'x3pa_per_game'
+]).then(([summaries, perGame]) => {
+  const paceData = summaries.filter(d => d.Season >= 1997);
+  const threePAData = perGame.filter(d => d.Season >= 1997);
+
+  const x = d3.scaleLinear()
+    .domain(d3.extent(paceData, d => d.Season))
+    .range([0, widthC]);
+
+  const yLeft = d3.scaleLinear()
+    .domain([d3.min(paceData, d => d.pace) - 1, d3.max(paceData, d => d.pace) + 1])
+    .range([heightC, 0]);
+
+  const yRight = d3.scaleLinear()
+    .domain([d3.min(threePAData, d => d.x3pa_per_game) - 1, d3.max(threePAData, d => d.x3pa_per_game) + 1])
+    .range([heightC, 0]);
+
+  // Axes
+  gC.append("g")
+    .attr("transform", `translate(0,${heightC})`)
+    .call(d3.axisBottom(x).tickFormat(d3.format("d")));
+
+  gC.append("g").call(d3.axisLeft(yLeft));
+  gC.append("g")
+    .attr("transform", `translate(${widthC},0)`)
+    .call(d3.axisRight(yRight));
+
+  // Pace line (left axis)
+  const paceLine = d3.line()
+    .x(d => x(d.Season))
+    .y(d => yLeft(d.pace));
+  gC.append("path")
+    .datum(paceData)
+    .attr("fill", "none")
+    .attr("stroke", "#1f77b4")
+    .attr("stroke-width", 2)
+    .attr("d", paceLine);
+
+  // 3PA per Game line (right axis)
+  const x3paLine = d3.line()
+    .x(d => x(d.Season))
+    .y(d => yRight(d.x3pa_per_game));
+  gC.append("path")
+    .datum(threePAData)
+    .attr("fill", "none")
+    .attr("stroke", "#ff7f0e")
+    .attr("stroke-width", 2)
+    .style("stroke-dasharray", "4,4")
+    .attr("d", x3paLine);
+
+  // Chart Title
+  svgC.append("text")
+    .attr("x", marginC.left + widthC / 2)
+    .attr("y", marginC.top / 2)
+    .attr("text-anchor", "middle")
+    .style("font-size", "18px")
+    .text("League Pace & 3PA per Game (1997–Present)");
+
+  // Y-axis labels
+  svgC.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 15)
+    .attr("x", - (marginC.top + heightC / 2))
+    .attr("text-anchor", "middle")
+    .text("Pace");
+
+  svgC.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", marginC.left + widthC + 20)
+    .attr("x", - (marginC.top + heightC / 2))
+    .attr("text-anchor", "middle")
+    .text("3PA per Game");
+
+  // Legend
+  const legend = svgC.append("g")
+    .attr("transform", `translate(${marginC.left + widthC - 160}, ${marginC.top})`);
+
+  legend.append("line")
+    .attr("x1", 0).attr("x2", 20)
+    .attr("y1", 0).attr("y2", 0)
+    .attr("stroke", "#1f77b4").attr("stroke-width", 2);
+  legend.append("text")
+    .attr("x", 25).attr("y", 5).text("Pace").style("font-size", "12px");
+
+  legend.append("line")
+    .attr("x1", 0).attr("x2", 20)
+    .attr("y1", 20).attr("y2", 20)
+    .attr("stroke", "#ff7f0e").attr("stroke-width", 2)
+    .style("stroke-dasharray", "4,4");
+  legend.append("text")
+    .attr("x", 25).attr("y", 25).text("3PA per Game").style("font-size", "12px");
+});
