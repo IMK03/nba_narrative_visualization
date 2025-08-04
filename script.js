@@ -673,13 +673,13 @@ function drawLeBronProfile() {
 
       // Label the last point of the line
       const last = lebronSeasons[lebronSeasons.length - 1];
-      svg.append("text")
-        .attr("x", x(last.season) + 5)
-        .attr("y", y(last[pos]))
-        .text(pos)
-        .style("fill", colors[i])
-        .style("font-size", "12px")
-        .attr("alignment-baseline", "middle");
+      //svg.append("text")
+        //.attr("x", x(last.season) + 5)
+        //.attr("y", y(last[pos]))
+        //.text(pos)
+        //.style("fill", colors[i])
+        //.style("font-size", "12px")
+        //.attr("alignment-baseline", "middle");
     });
 
     // Title
