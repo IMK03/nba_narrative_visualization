@@ -46,15 +46,18 @@ function showScene(sceneNum) {
     drawScene2ChartB();
     d3.select("#scene-text").text("Roles are blending: guards rebound, bigs assist, and everyone uses possessions. Stats are converging.");
   }
+
   if (sceneNum === 6) {
-    drawPaceVs3PAScatter(); //scene 2 chart c
+    drawPaceVs3PAScatter(); // scene 2 chart c
     d3.select("#scene-text").text("Pace-and-space revolution: faster play, more threes.");
   }
 
-  if (sceneNum === 6) {
+  if (sceneNum === 7) {
     drawLeBronProfile();
     d3.select("#scene-text").text("LeBron James is one of the best examples of the modern positionless NBA.");
+  }
 }
+
 
 // Scene 1 Chart A
 function drawScene1ChartA() {
