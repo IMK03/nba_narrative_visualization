@@ -210,7 +210,7 @@ function drawLineChart(lines, domainLabels, chartTitle, annotated = false) {
     .attr("y", height - 10)
     .attr("text-anchor", "middle")
     .style("font-size", "12px")
-    .text("Season");
+    .text("season");
 
   svg.append("text")
     .attr("transform", "rotate(-90)")
@@ -696,7 +696,7 @@ function drawLeBronProfile() {
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
     const statData = lebronAdvanced.map(d => ({
-      season: +d.Season, // assuming numeric like 2005
+      season: +d.season, // assuming numeric like 2005
       ast: +d.ast_percent,
       trb: +d.trb_percent,
       x3p_ar: +d.x3p_ar
