@@ -545,7 +545,7 @@ function drawPaceVs3PAScatter() {
     console.log("Raw data:", data);
     data.forEach(d => {
       d.pace = +d.Pace;
-      d.x3pa = +d.3PA;
+      d.x3pa = +d["3PA"];
       d.season = d.season ? d.season.trim() : "";
     });
 
@@ -572,10 +572,12 @@ function drawPaceVs3PAScatter() {
       .range([height - margin.bottom, margin.top]);
 
     // Axes
+    // X-axis
     svg.append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
       .call(d3.axisBottom(xScale));
 
+    // Y-axis
     svg.append("g")
       .attr("transform", `translate(${margin.left},0)`)
       .call(d3.axisLeft(yScale));
