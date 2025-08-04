@@ -539,7 +539,13 @@ function drawPaceVs3PAScatter() {
 
     const cleaned = data.filter(d =>
       d.Season && !isNaN(d.Pace) && !isNaN(d["3PA"])
-    );
+    ).map(d => ({
+      seasonLabel: d.Season,               // keep original "2024-25"
+      seasonYear: +d.Season.slice(0, 4),   // extract 2024
+      pace: +d.Pace,
+      x3pa: +d["3PA"]
+    }));
+
 
     console.log("Filtered data:", cleaned);
 
