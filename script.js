@@ -699,8 +699,8 @@ function drawLeBronProfile() {
         season: d.season,
         AST: d.ast_percent,
         TRB: d.trb_percent,
-        "3PAr": d.x3p_ar,
-        FTr: d.f_tr,
+        x3p_ar: d.x3p_ar,
+        ftr: d.f_tr,
         USG: d.usg_percent
       }))
       .sort((a, b) => a.season - b.season);
