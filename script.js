@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
   showScene(currentScene);
 
   d3.select("#next").on("click", () => {
-    if (currentScene < 6) {
+    if (currentScene < 7) {
       currentScene++;
       showScene(currentScene);
     }
@@ -50,6 +50,10 @@ function showScene(sceneNum) {
     drawPaceVs3PAScatter(); //scene 2 chart c
     d3.select("#scene-text").text("Pace-and-space revolution: faster play, more threes.");
   }
+
+  if (sceneNum === 6) {
+    drawLeBronProfile();
+    d3.select("#scene-text").text("LeBron James is one of the best examples of the modern positionless NBA.");
 }
 
 // Scene 1 Chart A
@@ -613,3 +617,131 @@ function drawPaceVs3PAScatter() {
       .text("League Pace vs 3PA per Game (Scatter Plot)");
   });
 }
+
+function drawLeBronProfile() {
+  // Load both CSVs
+  Promise.all([
+    d3.csv("data/Player Play By Play.csv", d3.autoType),
+    d3.csv("data/Player Advanced.csv", d3.autoType)
+  ]).then(([playByPlay, advanced]) => {
+    // Filter data for LeBron James
+    const lebronPlay = playByPlay.filter(d => d.Player === "LeBron James");
+    const lebronAdvanced = advanced.filter(d => d.Player === "LeBron James");
+
+    // ---- CHART A: Position Percentages ----
+    const svgA = d3.select("#viz-container").append("svg")
+      .attr("width", 600)
+      .attr("height", 400);
+
+    const positionData = [
+      { position: "PG", value: d3.mean(lebronPlay, d => d.pg_percent) },
+      { position: "SG", value: d3.mean(lebronPlay, d => d.sg_percent) },
+      { position: "SF", value: d3.mean(lebronPlay, d => d.sf_percent) },
+      { position: "PF", value: d3.mean(lebronPlay, d => d.pf_percent) },
+      { position: "C",  value: d3.mean(lebronPlay, d => d.c_percent) }
+    ];
+
+    const xPos = d3.scaleBand()
+      .domain(positionData.map(d => d.position))
+      .range([60, 500])
+      .padding(0.2);
+
+    const yPos = d3.scaleLinear()
+      .domain([0, d3.max(positionData, d => d.value)]).nice()
+      .range([350, 50]);
+
+    svgA.append("g")
+      .attr("transform", "translate(0,350)")
+      .call(d3.axisBottom(xPos));
+
+    svgA.append("g")
+      .attr("transform", "translate(60,0)")
+      .call(d3.axisLeft(yPos));
+
+    svgA.selectAll("rect")
+      .data(positionData)
+      .enter()
+      .append("rect")
+      .attr("x", d => xPos(d.position))
+      .attr("y", d => yPos(d.value))
+      .attr("width", xPos.bandwidth())
+      .attr("height", d => 350 - yPos(d.value))
+      .attr("fill", "#1f77b4");
+
+    svgA.append("text")
+      .attr("x", 300)
+      .attr("y", 30)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .text("LeBron James – Avg % Time at Each Position");
+
+    // ---- CHART B: Stat Trends Over Time ----
+    const svgB = d3.select("#viz-container").append("svg")
+      .attr("width", 800)
+      .attr("height", 450);
+
+    const margin = { top: 50, right: 150, bottom: 50, left: 60 },
+          width = 800 - margin.left - margin.right,
+          height = 450 - margin.top - margin.bottom;
+
+    const g = svgB.append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const statData = lebronAdvanced.map(d => ({
+      season: +d.Season, // assuming numeric like 2005
+      ast: +d.ast_percent,
+      trb: +d.trb_percent,
+      x3p_ar: +d.x3p_ar
+    })).sort((a, b) => a.season - b.season);
+
+    const xScale = d3.scaleLinear()
+      .domain(d3.extent(statData, d => d.season))
+      .range([0, width]);
+
+    const yScale = d3.scaleLinear()
+      .domain([
+        0,
+        d3.max(statData, d => Math.max(d.ast, d.trb, d.x3p_ar))
+      ])
+      .nice()
+      .range([height, 0]);
+
+    g.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
+
+    g.append("g")
+      .call(d3.axisLeft(yScale));
+
+    const line = (accessor, color, label) => {
+      g.append("path")
+        .datum(statData)
+        .attr("fill", "none")
+        .attr("stroke", color)
+        .attr("stroke-width", 2)
+        .attr("d", d3.line()
+          .x(d => xScale(d.season))
+          .y(d => yScale(accessor(d)))
+        );
+
+      svgB.append("text")
+        .attr("x", width + margin.left + 10)
+        .attr("y", yScale(accessor(statData[statData.length - 1])) + margin.top)
+        .text(label)
+        .style("fill", color)
+        .style("font-size", "12px");
+    };
+
+    line(d => d.ast, "#ff7f0e", "AST%");
+    line(d => d.trb, "#2ca02c", "TRB%");
+    line(d => d.x3p_ar, "#9467bd", "3P Attempt Rate");
+
+    svgB.append("text")
+      .attr("x", width / 2 + margin.left)
+      .attr("y", margin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .text("LeBron James – AST%, TRB%, 3P Attempt Rate Over Time");
+  });
+}
+
