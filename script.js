@@ -542,16 +542,16 @@ function drawPaceVs3PAScatter() {
     .attr("height", height);
 
   d3.csv("data/pace3p.csv").then(data => {
-    // Directly convert necessary fields assuming clean data
+    // Convert and clean
     data.forEach(d => {
       d.pace = +d.Pace;
       d.x3pa = +d["3PA"];
-      d.season = d.season?.trim(); // preserve the season label
+      d.season = d.season?.trim();  // keep season as label
     });
 
+    // Scales with fixed x-axis domain
     const xScale = d3.scaleLinear()
-      .domain(d3.extent(data, d => d.pace))
-      .nice()
+      .domain([85, 105]) // <- limit x-axis
       .range([margin.left, width - margin.right]);
 
     const yScale = d3.scaleLinear()
