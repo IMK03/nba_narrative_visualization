@@ -527,13 +527,12 @@ function drawScene2ChartB() {
 }
 
 
-
 function drawScene2ChartC() {
   const svgC = d3.select("#viz-container").append("svg")
     .attr("width", 900)
     .attr("height", 500);
 
-  const marginC = { top: 50, right: 90, bottom: 50, left: 60 };
+  const marginC = { top: 50, right: 60, bottom: 50, left: 80 };
   const widthC = 900 - marginC.left - marginC.right;
   const heightC = 500 - marginC.top - marginC.bottom;
 
@@ -543,95 +542,91 @@ function drawScene2ChartC() {
     d3.csv("data/Team Summaries.csv", d3.autoType),       // contains 'Season' and 'pace'
     d3.csv("data/Team Stats Per Game.csv", d3.autoType)    // contains 'Season' and 'x3pa_per_game'
   ]).then(([summaries, perGame]) => {
-    const paceData = summaries.filter(d => d.Season >= 1997);
-    const threePAData = perGame.filter(d => d.Season >= 1997);
+    // Filter for years 1980+
+    const paceData = summaries.filter(d => d.Season >= 1980);
+    const threePAData = perGame.filter(d => d.Season >= 1980);
 
-    // X-axis scale
+    // Join data by Season to get combined {Season, pace, x3pa_per_game}
+    const paceBySeason = new Map(paceData.map(d => [d.Season, d.pace]));
+    const threePABySeason = new Map(threePAData.map(d => [d.Season, d.x3pa_per_game]));
+
+    // Create combined array where both pace and 3PA exist
+    const combinedData = [];
+    for (const [season, pace] of paceBySeason) {
+      if (threePABySeason.has(season)) {
+        combinedData.push({
+          season,
+          pace,
+          x3pa_per_game: threePABySeason.get(season)
+        });
+      }
+    }
+    combinedData.sort((a, b) => a.season - b.season);
+
+    // X scale: pace
     const x = d3.scaleLinear()
-      .domain(d3.extent(paceData, d => d.Season))
+      .domain(d3.extent(combinedData, d => d.pace))
+      .nice()
       .range([0, widthC]);
 
-    // Y-axis for pace
-    const yLeft = d3.scaleLinear()
-      .domain([d3.min(paceData, d => d.pace) - 1, d3.max(paceData, d => d.pace) + 1])
+    // Y scale: x3pa_per_game
+    const y = d3.scaleLinear()
+      .domain(d3.extent(combinedData, d => d.x3pa_per_game))
+      .nice()
       .range([heightC, 0]);
 
-    // Y-axis for 3PA per game
-    const yRight = d3.scaleLinear()
-      .domain([d3.min(threePAData, d => d.x3pa_per_game) - 1, d3.max(threePAData, d => d.x3pa_per_game) + 1])
-      .range([heightC, 0]);
-
-    // Draw axes
+    // X axis
     gC.append("g")
       .attr("transform", `translate(0,${heightC})`)
-      .call(d3.axisBottom(x).tickFormat(d3.format("d")));
+      .call(d3.axisBottom(x));
 
-    gC.append("g").call(d3.axisLeft(yLeft));
+    // Y axis
     gC.append("g")
-      .attr("transform", `translate(${widthC},0)`)
-      .call(d3.axisRight(yRight));
+      .call(d3.axisLeft(y));
 
-    // Draw pace line
-    const paceLine = d3.line()
-      .x(d => x(d.Season))
-      .y(d => yLeft(d.pace));
+    // Draw line connecting points by season order
+    const line = d3.line()
+      .x(d => x(d.pace))
+      .y(d => y(d.x3pa_per_game));
 
     gC.append("path")
-      .datum(paceData)
+      .datum(combinedData)
       .attr("fill", "none")
       .attr("stroke", "#1f77b4")
       .attr("stroke-width", 2)
-      .attr("d", paceLine);
+      .attr("d", line);
 
-    // Draw 3PA line
-    const x3paLine = d3.line()
-      .x(d => x(d.Season))
-      .y(d => yRight(d.x3pa_per_game));
+    // Draw points for each year
+    gC.selectAll("circle")
+      .data(combinedData)
+      .enter()
+      .append("circle")
+      .attr("cx", d => x(d.pace))
+      .attr("cy", d => y(d.x3pa_per_game))
+      .attr("r", 4)
+      .attr("fill", "#ff7f0e")
+      .append("title")
+      .text(d => `Season: ${d.season}\nPace: ${d.pace}\n3PA/Game: ${d.x3pa_per_game}`);
 
-    gC.append("path")
-      .datum(threePAData)
-      .attr("fill", "none")
-      .attr("stroke", "#ff7f0e")
-      .attr("stroke-width", 2)
-      .style("stroke-dasharray", "4,4")
-      .attr("d", x3paLine);
-
-    // Chart title
+    // Labels
     svgC.append("text")
       .attr("x", marginC.left + widthC / 2)
       .attr("y", marginC.top / 2)
       .attr("text-anchor", "middle")
       .style("font-size", "18px")
-      .text("League Pace & 3PA per Game (1997–Present)");
-
-    // Y-axis labels
-    svgC.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 15)
-      .attr("x", - (marginC.top + heightC / 2))
-      .attr("text-anchor", "middle")
-      .text("Pace");
+      .text("League Avg 3PA per Game vs Pace (1980–Present)");
 
     svgC.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", marginC.left + widthC + 20)
-      .attr("x", - (marginC.top + heightC / 2))
       .attr("text-anchor", "middle")
-      .text("3PA per Game");
+      .attr("x", marginC.left + widthC / 2)
+      .attr("y", heightC + marginC.top + 40)
+      .text("League Average Pace");
 
-    // Legend
-    const legend = svgC.append("g")
-      .attr("transform", `translate(${marginC.left + widthC - 160}, ${marginC.top})`);
-
-    legend.append("line")
-      .attr("x1", 0).attr("x2", 20).attr("y1", 0).attr("y2", 0)
-      .attr("stroke", "#1f77b4").attr("stroke-width", 2);
-    legend.append("text").attr("x", 25).attr("y", 5).text("Pace").style("font-size", "12px");
-
-    legend.append("line")
-      .attr("x1", 0).attr("x2", 20).attr("y1", 20).attr("y2", 20)
-      .attr("stroke", "#ff7f0e").attr("stroke-width", 2).style("stroke-dasharray", "4,4");
-    legend.append("text").attr("x", 25).attr("y", 25).text("3PA per Game").style("font-size", "12px");
+    svgC.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("text-anchor", "middle")
+      .attr("x", -(marginC.top + heightC / 2))
+      .attr("y", marginC.left - 50)
+      .text("League Average 3PA per Game");
   });
 }
-
