@@ -539,18 +539,24 @@ function drawScene2ChartC() {
   const gC = svgC.append("g").attr("transform", `translate(${marginC.left},${marginC.top})`);
 
   Promise.all([
-    d3.csv("data/Team Summaries.csv", d3.autoType),       // contains 'Season' and 'pace'
-    d3.csv("data/Team Stats Per Game.csv", d3.autoType)    // contains 'Season' and 'x3pa_per_game'
+    d3.csv("data/Team Summaries.csv", d3.autoType),
+    d3.csv("data/Team Stats Per Game.csv", d3.autoType)
   ]).then(([summaries, perGame]) => {
-    // Filter for years 1980+
+    console.log("Loaded summaries:", summaries);
+    console.log("Loaded perGame stats:", perGame);
+
     const paceData = summaries.filter(d => d.Season >= 1980);
     const threePAData = perGame.filter(d => d.Season >= 1980);
 
-    // Join data by Season to get combined {Season, pace, x3pa_per_game}
+    console.log("Filtered paceData (1980+):", paceData);
+    console.log("Filtered threePAData (1980+):", threePAData);
+
     const paceBySeason = new Map(paceData.map(d => [d.Season, d.pace]));
     const threePABySeason = new Map(threePAData.map(d => [d.Season, d.x3pa_per_game]));
 
-    // Create combined array where both pace and 3PA exist
+    console.log("paceBySeason Map:", paceBySeason);
+    console.log("threePABySeason Map:", threePABySeason);
+
     const combinedData = [];
     for (const [season, pace] of paceBySeason) {
       if (threePABySeason.has(season)) {
@@ -563,28 +569,30 @@ function drawScene2ChartC() {
     }
     combinedData.sort((a, b) => a.season - b.season);
 
-    // X scale: pace
+    console.log("Combined data for plotting:", combinedData);
+
+    if (combinedData.length === 0) {
+      console.warn("No combined data found for matching seasons!");
+      return;
+    }
+
     const x = d3.scaleLinear()
       .domain(d3.extent(combinedData, d => d.pace))
       .nice()
       .range([0, widthC]);
 
-    // Y scale: x3pa_per_game
     const y = d3.scaleLinear()
       .domain(d3.extent(combinedData, d => d.x3pa_per_game))
       .nice()
       .range([heightC, 0]);
 
-    // X axis
     gC.append("g")
       .attr("transform", `translate(0,${heightC})`)
       .call(d3.axisBottom(x));
 
-    // Y axis
     gC.append("g")
       .call(d3.axisLeft(y));
 
-    // Draw line connecting points by season order
     const line = d3.line()
       .x(d => x(d.pace))
       .y(d => y(d.x3pa_per_game));
@@ -596,7 +604,6 @@ function drawScene2ChartC() {
       .attr("stroke-width", 2)
       .attr("d", line);
 
-    // Draw points for each year
     gC.selectAll("circle")
       .data(combinedData)
       .enter()
@@ -608,7 +615,6 @@ function drawScene2ChartC() {
       .append("title")
       .text(d => `Season: ${d.season}\nPace: ${d.pace}\n3PA/Game: ${d.x3pa_per_game}`);
 
-    // Labels
     svgC.append("text")
       .attr("x", marginC.left + widthC / 2)
       .attr("y", marginC.top / 2)
@@ -628,5 +634,7 @@ function drawScene2ChartC() {
       .attr("x", -(marginC.top + heightC / 2))
       .attr("y", marginC.left - 50)
       .text("League Average 3PA per Game");
+  }).catch(error => {
+    console.error("Error loading CSV data:", error);
   });
 }
