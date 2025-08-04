@@ -629,8 +629,7 @@ function drawPaceVs3PAScatter() {
       .attr("text-anchor", "middle")
       .style("font-size", "18px")
       .text("League Pace vs 3PA per Game (Scatter Plot)");
-  });
-}
+  };
 function drawLeBronProfile() {
   Promise.all([
     d3.csv("data/Player Play By Play.csv", d3.autoType),
