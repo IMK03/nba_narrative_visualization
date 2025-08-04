@@ -544,8 +544,8 @@ function drawPaceVs3PAScatter() {
   d3.csv("data/pace3p.csv").then(data => {
     console.log("Raw data:", data);
     data.forEach(d => {
-      d.pace = +d.pace;
-      d.x3pa = +d.x3pa;
+      d.pace = +d.Pace;
+      d.x3pa = +d.3PA;
       d.season = d.season ? d.season.trim() : "";
     });
 
