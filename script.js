@@ -54,7 +54,6 @@ function showScene(sceneNum) {
 
   if (sceneNum === 7) {
     drawLeBronProfile();
-    drawLeBronAdvancedStats();
     d3.select("#scene-text").text("LeBron James is one of the best examples of the modern positionless NBA.");
   }
 }
@@ -615,8 +614,13 @@ function drawPaceVs3PAScatter() {
   });
 }
 function drawLeBronProfile() {
-  d3.csv("data/Player Play By Play.csv", d3.autoType).then(data => {
-    const lebronSeasons = data
+  // Load both CSV files in parallel
+  Promise.all([
+    d3.csv("data/Player Play By Play.csv", d3.autoType),
+    d3.csv("data/Advanced.csv", d3.autoType)
+  ]).then(([playByPlayData, advancedData]) => {
+    // === First Chart: Position Percentages ===
+    const lebronSeasons = playByPlayData
       .filter(d => d.player === "LeBron James")
       .map(d => {
         const total = d.pg_percent + d.sg_percent + d.sf_percent + d.pf_percent + d.c_percent;
@@ -632,67 +636,64 @@ function drawLeBronProfile() {
       .sort((a, b) => a.season - b.season);
 
     const positions = ["PG", "SG", "SF", "PF", "C"];
-    const colors = d3.schemeCategory10;
+    const posColors = d3.schemeCategory10;
 
     const width = 850;
     const height = 450;
     const margin = { top: 50, right: 150, bottom: 50, left: 60 };
 
-    const svg = d3.select("#profile-chart").append("svg")
+    const svg1 = d3.select("#viz-container").append("svg")
       .attr("width", width)
       .attr("height", height);
 
-    const x = d3.scaleLinear()
+    const x1 = d3.scaleLinear()
       .domain(d3.extent(lebronSeasons, d => d.season))
       .range([margin.left, width - margin.right]);
 
-    const y = d3.scaleLinear()
+    const y1 = d3.scaleLinear()
       .domain([0, 1])
       .range([height - margin.bottom, margin.top]);
 
-    svg.append("g")
+    svg1.append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).tickFormat(d3.format("d")));
+      .call(d3.axisBottom(x1).tickFormat(d3.format("d")));
 
-    svg.append("g")
+    svg1.append("g")
       .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y).tickFormat(d3.format(".0%")));
+      .call(d3.axisLeft(y1).tickFormat(d3.format(".0%")));
 
-    const line = pos =>
+    const line1 = pos =>
       d3.line()
-        .x(d => x(d.season))
-        .y(d => y(d[pos]));
+        .x(d => x1(d.season))
+        .y(d => y1(d[pos]));
 
     positions.forEach((pos, i) => {
-      svg.append("path")
+      svg1.append("path")
         .datum(lebronSeasons)
         .attr("fill", "none")
-        .attr("stroke", colors[i])
+        .attr("stroke", posColors[i])
         .attr("stroke-width", 2)
-        .attr("d", line(pos));
+        .attr("d", line1(pos));
 
       const last = lebronSeasons[lebronSeasons.length - 1];
-      svg.append("text")
-        .attr("x", x(last.season) + 5)
-        .attr("y", y(last[pos]))
+      svg1.append("text")
+        .attr("x", x1(last.season) + 5)
+        .attr("y", y1(last[pos]))
         .text(pos)
-        .style("fill", colors[i])
+        .style("fill", posColors[i])
         .style("font-size", "12px")
         .attr("alignment-baseline", "middle");
     });
 
-    svg.append("text")
+    svg1.append("text")
       .attr("x", width / 2)
       .attr("y", margin.top / 2)
       .attr("text-anchor", "middle")
       .style("font-size", "16px")
       .text("LeBron James – Normalized Position Percentages by Season");
-  });
-}
 
-function drawLeBronAdvancedStats() {
-  d3.csv("data/Advanced.csv", d3.autoType).then(data => {
-    const lebronStats = data
+    // === Second Chart: Advanced Stats ===
+    const lebronStats = advancedData
       .filter(d => d.player === "LeBron James")
       .map(d => ({
         season: d.season,
@@ -705,21 +706,17 @@ function drawLeBronAdvancedStats() {
       .sort((a, b) => a.season - b.season);
 
     const metrics = ["AST", "TRB", "3PAr", "FTr", "USG"];
-    const colors = d3.schemeTableau10; // Different color set
+    const advColors = d3.schemeTableau10; // Use a different palette for clarity
 
-    const width = 850;
-    const height = 450;
-    const margin = { top: 50, right: 150, bottom: 50, left: 60 };
-
-    const svg = d3.select("#advanced-chart").append("svg")
+    const svg2 = d3.select("#viz-container").append("svg")
       .attr("width", width)
       .attr("height", height);
 
-    const x = d3.scaleLinear()
+    const x2 = d3.scaleLinear()
       .domain(d3.extent(lebronStats, d => d.season))
       .range([margin.left, width - margin.right]);
 
-    const y = d3.scaleLinear()
+    const y2 = d3.scaleLinear()
       .domain([
         0,
         d3.max(lebronStats, d => d3.max(metrics, key => d[key]))
@@ -727,38 +724,38 @@ function drawLeBronAdvancedStats() {
       .nice()
       .range([height - margin.bottom, margin.top]);
 
-    svg.append("g")
+    svg2.append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).tickFormat(d3.format("d")));
+      .call(d3.axisBottom(x2).tickFormat(d3.format("d")));
 
-    svg.append("g")
+    svg2.append("g")
       .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y));
+      .call(d3.axisLeft(y2));
 
-    const line = key =>
+    const line2 = key =>
       d3.line()
-        .x(d => x(d.season))
-        .y(d => y(d[key]));
+        .x(d => x2(d.season))
+        .y(d => y2(d[key]));
 
     metrics.forEach((key, i) => {
-      svg.append("path")
+      svg2.append("path")
         .datum(lebronStats)
         .attr("fill", "none")
-        .attr("stroke", colors[i])
+        .attr("stroke", advColors[i])
         .attr("stroke-width", 2)
-        .attr("d", line(key));
+        .attr("d", line2(key));
 
       const last = lebronStats[lebronStats.length - 1];
-      svg.append("text")
-        .attr("x", x(last.season) + 5)
-        .attr("y", y(last[key]))
+      svg2.append("text")
+        .attr("x", x2(last.season) + 5)
+        .attr("y", y2(last[key]))
         .text(key)
-        .style("fill", colors[i])
+        .style("fill", advColors[i])
         .style("font-size", "12px")
         .attr("alignment-baseline", "middle");
     });
 
-    svg.append("text")
+    svg2.append("text")
       .attr("x", width / 2)
       .attr("y", margin.top / 2)
       .attr("text-anchor", "middle")
