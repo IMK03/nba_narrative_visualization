@@ -617,7 +617,7 @@ function drawPaceVs3PAScatter() {
 function drawLeBronProfile() {
   d3.csv("data/Player Play By Play.csv", d3.autoType).then(data => {
     const lebronSeasons = data
-      .filter(d => d.Player === "LeBron James")
+      .filter(d => d.player === "LeBron James")
       .map(d => ({
         season: +d.season.split("-")[0],  // "2015-16" → 2015
         PG: d.pg_percent,
