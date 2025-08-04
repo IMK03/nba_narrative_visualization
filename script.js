@@ -613,19 +613,22 @@ function drawPaceVs3PAScatter() {
       .text("League Pace vs 3PA per Game (Scatter Plot)");
   });
 }
-
 function drawLeBronProfile() {
   d3.csv("data/Player Play By Play.csv", d3.autoType).then(data => {
+    // Filter for LeBron James and normalize position percentages per season
     const lebronSeasons = data
       .filter(d => d.player === "LeBron James")
-      .map(d => ({
-        season: d.season,  // "2015-16" → 2015
-        PG: d.pg_percent,
-        SG: d.sg_percent,
-        SF: d.sf_percent,
-        PF: d.pf_percent,
-        C: d.c_percent
-      }))
+      .map(d => {
+        const total = d.pg_percent + d.sg_percent + d.sf_percent + d.pf_percent + d.c_percent;
+        return {
+          season: d.season,
+          PG: d.pg_percent / total,
+          SG: d.sg_percent / total,
+          SF: d.sf_percent / total,
+          PF: d.pf_percent / total,
+          C: d.c_percent / total
+        };
+      })
       .sort((a, b) => a.season - b.season);
 
     const positions = ["PG", "SG", "SF", "PF", "C"];
@@ -644,7 +647,7 @@ function drawLeBronProfile() {
       .range([margin.left, width - margin.right]);
 
     const y = d3.scaleLinear()
-      .domain([0, 1])  // 0% to 100%
+      .domain([0, 1])
       .range([height - margin.bottom, margin.top]);
 
     // Axes
@@ -656,13 +659,13 @@ function drawLeBronProfile() {
       .attr("transform", `translate(${margin.left},0)`)
       .call(d3.axisLeft(y).tickFormat(d3.format(".0%")));
 
-    // Line generator
+    // Line generator function
     const line = pos =>
       d3.line()
         .x(d => x(d.season))
         .y(d => y(d[pos]));
 
-    // Draw one line per position
+    // Draw lines for each position
     positions.forEach((pos, i) => {
       svg.append("path")
         .datum(lebronSeasons)
@@ -671,7 +674,7 @@ function drawLeBronProfile() {
         .attr("stroke-width", 2)
         .attr("d", line(pos));
 
-      // Label the last point of the line
+      // Add text label at the last season's data point
       const last = lebronSeasons[lebronSeasons.length - 1];
       svg.append("text")
         .attr("x", x(last.season) + 5)
@@ -682,12 +685,12 @@ function drawLeBronProfile() {
         .attr("alignment-baseline", "middle");
     });
 
-    // Title
+    // Chart title
     svg.append("text")
       .attr("x", width / 2)
       .attr("y", margin.top / 2)
       .attr("text-anchor", "middle")
       .style("font-size", "16px")
-      .text("LeBron James – Position Percentages by Season");
+      .text("LeBron James – Normalized Position Percentages by Season");
   });
 }
