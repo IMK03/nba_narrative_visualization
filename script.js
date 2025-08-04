@@ -546,7 +546,7 @@ function drawPaceVs3PAScatter() {
     data.forEach(d => {
       d.pace = +d.Pace;
       d.x3pa = +d["3PA"];
-      d.season = d.season?.trim();  // keep season as label
+      d.season = d.Season?.trim(); // if column is 'Season'
     });
 
     // Scales with fixed x-axis domain
