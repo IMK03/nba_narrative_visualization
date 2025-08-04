@@ -526,69 +526,67 @@ function drawScene2ChartB() {
   });
 }
 
-
 function drawScene2ChartC() {
-  const svgC = d3.select("#viz-container").append("svg")
+  const svg = d3.select("#viz-container").append("svg")
     .attr("width", 900)
     .attr("height", 500);
 
-  const marginC = { top: 50, right: 90, bottom: 50, left: 60 };
-  const widthC = 900 - marginC.left - marginC.right;
-  const heightC = 500 - marginC.top - marginC.bottom;
+  const margin = { top: 50, right: 90, bottom: 50, left: 60 };
+  const width = 900 - margin.left - margin.right;
+  const height = 500 - margin.top - margin.bottom;
 
-  const gC = svgC.append("g").attr("transform", `translate(${marginC.left},${marginC.top})`);
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
   Promise.all([
-    d3.csv("data/Team Summaries.csv", d3.autoType),
-    d3.csv("data/Team Stats Per Game.csv", d3.autoType)
+    d3.csv("data/Team Summaries.csv", d3.autoType),       // has 'Season', 'pace'
+    d3.csv("data/Team Stats Per Game.csv", d3.autoType)   // has 'Season', 'x3pa_per_game'
   ]).then(([summaries, perGame]) => {
-
-    // Filter seasons >= 1980
-    const filteredSummaries = summaries.filter(d => d.Season >= 1980);
-    const filteredPerGame = perGame.filter(d => d.Season >= 1980);
-
-    // Aggregate pace per season manually
+    // Group and average pace per season
     const paceBySeason = {};
-    filteredSummaries.forEach(d => {
-      if (!paceBySeason[d.Season]) {
-        paceBySeason[d.Season] = { sum: 0, count: 0 };
+    summaries.forEach(d => {
+      if (d.Season >= 1980 && d.pace != null) {
+        const year = +d.Season;
+        if (!paceBySeason[year]) paceBySeason[year] = { sum: 0, count: 0 };
+        paceBySeason[year].sum += d.pace;
+        paceBySeason[year].count += 1;
       }
-      paceBySeason[d.Season].sum += d.pace;
-      paceBySeason[d.Season].count += 1;
     });
-    for (const season in paceBySeason) {
-      paceBySeason[season] = paceBySeason[season].sum / paceBySeason[season].count;
-    }
 
-    // Aggregate x3pa_per_game per season manually
+    // Group and average 3PA per game per season
     const x3paBySeason = {};
-    filteredPerGame.forEach(d => {
-      if (!x3paBySeason[d.Season]) {
-        x3paBySeason[d.Season] = { sum: 0, count: 0 };
+    perGame.forEach(d => {
+      if (d.Season >= 1980 && d.x3pa_per_game != null) {
+        const year = +d.Season;
+        if (!x3paBySeason[year]) x3paBySeason[year] = { sum: 0, count: 0 };
+        x3paBySeason[year].sum += d.x3pa_per_game;
+        x3paBySeason[year].count += 1;
       }
-      x3paBySeason[d.Season].sum += d.x3pa_per_game;
-      x3paBySeason[d.Season].count += 1;
     });
-    for (const season in x3paBySeason) {
-      x3paBySeason[season] = x3paBySeason[season].sum / x3paBySeason[season].count;
+
+    // Compute averages
+    for (const season in paceBySeason) {
+      const year = +season;
+      paceBySeason[year] = paceBySeason[year].sum / paceBySeason[year].count;
     }
 
-    console.log("Average pace by season:", paceBySeason);
-    console.log("Average x3pa per game by season:", x3paBySeason);
+    for (const season in x3paBySeason) {
+      const year = +season;
+      x3paBySeason[year] = x3paBySeason[year].sum / x3paBySeason[year].count;
+    }
 
-    // Combine seasons where both stats exist
+    // Combine data
     const combinedData = [];
-    Object.keys(paceBySeason).forEach(season => {
-      if (x3paBySeason[season] !== undefined) {
+    Object.keys(paceBySeason).forEach(seasonStr => {
+      const season = +seasonStr;
+      if (x3paBySeason.hasOwnProperty(season)) {
         combinedData.push({
-          season: +season,
+          season,
           pace: paceBySeason[season],
           x3pa_per_game: x3paBySeason[season]
         });
       }
     });
 
-    combinedData.sort((a, b) => a.season - b.season);
     console.log("Combined data for plotting:", combinedData);
 
     if (combinedData.length === 0) {
@@ -599,32 +597,25 @@ function drawScene2ChartC() {
     // Scales
     const x = d3.scaleLinear()
       .domain(d3.extent(combinedData, d => d.season))
-      .range([0, widthC]);
+      .range([0, width]);
 
     const yLeft = d3.scaleLinear()
-      .domain([
-        d3.min(combinedData, d => d.pace) - 1,
-        d3.max(combinedData, d => d.pace) + 1
-      ])
-      .range([heightC, 0]);
+      .domain([d3.min(combinedData, d => d.pace) - 1, d3.max(combinedData, d => d.pace) + 1])
+      .range([height, 0]);
 
     const yRight = d3.scaleLinear()
-      .domain([
-        d3.min(combinedData, d => d.x3pa_per_game) - 1,
-        d3.max(combinedData, d => d.x3pa_per_game) + 1
-      ])
-      .range([heightC, 0]);
+      .domain([d3.min(combinedData, d => d.x3pa_per_game) - 1, d3.max(combinedData, d => d.x3pa_per_game) + 1])
+      .range([height, 0]);
 
     // Axes
-    gC.append("g")
-      .attr("transform", `translate(0,${heightC})`)
+    g.append("g")
+      .attr("transform", `translate(0,${height})`)
       .call(d3.axisBottom(x).tickFormat(d3.format("d")));
 
-    gC.append("g")
-      .call(d3.axisLeft(yLeft));
+    g.append("g").call(d3.axisLeft(yLeft));
 
-    gC.append("g")
-      .attr("transform", `translate(${widthC},0)`)
+    g.append("g")
+      .attr("transform", `translate(${width},0)`)
       .call(d3.axisRight(yRight));
 
     // Lines
@@ -636,14 +627,14 @@ function drawScene2ChartC() {
       .x(d => x(d.season))
       .y(d => yRight(d.x3pa_per_game));
 
-    gC.append("path")
+    g.append("path")
       .datum(combinedData)
       .attr("fill", "none")
       .attr("stroke", "#1f77b4")
       .attr("stroke-width", 2)
       .attr("d", paceLine);
 
-    gC.append("path")
+    g.append("path")
       .datum(combinedData)
       .attr("fill", "none")
       .attr("stroke", "#ff7f0e")
@@ -651,31 +642,31 @@ function drawScene2ChartC() {
       .style("stroke-dasharray", "4,4")
       .attr("d", x3paLine);
 
-    // Titles and labels
-    svgC.append("text")
-      .attr("x", marginC.left + widthC / 2)
-      .attr("y", marginC.top / 2)
+    // Labels
+    svg.append("text")
+      .attr("x", margin.left + width / 2)
+      .attr("y", margin.top / 2)
       .attr("text-anchor", "middle")
       .style("font-size", "18px")
-      .text("League Average Pace & 3PA per Game (1980–Present)");
+      .text("League Pace & 3PA per Game (1980–Present)");
 
-    svgC.append("text")
+    svg.append("text")
       .attr("transform", "rotate(-90)")
+      .attr("x", -margin.top - height / 2)
       .attr("y", 15)
-      .attr("x", - (marginC.top + heightC / 2))
       .attr("text-anchor", "middle")
       .text("Pace");
 
-    svgC.append("text")
+    svg.append("text")
       .attr("transform", "rotate(-90)")
-      .attr("y", marginC.left + widthC + 20)
-      .attr("x", - (marginC.top + heightC / 2))
+      .attr("x", -margin.top - height / 2)
+      .attr("y", margin.left + width + 40)
       .attr("text-anchor", "middle")
       .text("3PA per Game");
 
     // Legend
-    const legend = svgC.append("g")
-      .attr("transform", `translate(${marginC.left + widthC - 160}, ${marginC.top})`);
+    const legend = svg.append("g")
+      .attr("transform", `translate(${margin.left + width - 160}, ${margin.top})`);
 
     legend.append("line")
       .attr("x1", 0).attr("x2", 20).attr("y1", 0).attr("y2", 0)
@@ -686,8 +677,5 @@ function drawScene2ChartC() {
       .attr("x1", 0).attr("x2", 20).attr("y1", 20).attr("y2", 20)
       .attr("stroke", "#ff7f0e").attr("stroke-width", 2).style("stroke-dasharray", "4,4");
     legend.append("text").attr("x", 25).attr("y", 25).text("3PA per Game").style("font-size", "12px");
-
-  }).catch(err => {
-    console.error("Error loading or processing CSV data:", err);
   });
 }
