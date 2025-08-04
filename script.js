@@ -543,19 +543,23 @@ function drawPaceVs3PAScatter() {
 
   d3.csv("data/pace3p.csv").then(data => {
     console.log("Raw data:", data);
-    data.forEach(d => {
-      d.pace = +d.Pace;
-      d.x3pa = +d["3PA"];
-      d.season = d.season ? d.season.trim() : "";
-    });
 
-    const cleaned = data.filter(d =>
-      d.season && !isNaN(d.pace) && !isNaN(d.x3pa)
-    ).map(d => ({
-      seasonLabel: d.season,               // keep original "2024-25"
-      seasonYear: +d.season.slice(0, 4),   // extract 2024
-      pace: +d.pace,
-      x3pa: +d.x3pa
+    const cleaned = data.map(d => {
+      const season = d.season ? d.season.trim() : "";
+      const pace = +d.Pace;
+      const x3pa = +d["3PA"];
+
+      if (!season || isNaN(pace) || isNaN(x3pa)) return null;
+
+      return {
+        seasonLabel: season,               // keep original "2024-25"
+        seasonYear: +season.slice(0, 4),   // extract 2024
+        pace: pace,
+        x3pa: x3pa
+      };
+    }).filter(d => d !== null);
+
+    console.log("Filtered data:", cleaned);
     }));
 
 
