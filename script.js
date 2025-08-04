@@ -542,32 +542,20 @@ function drawPaceVs3PAScatter() {
     .attr("height", height);
 
   d3.csv("data/pace3p.csv").then(data => {
-    console.log("Raw data:", data);
+    // Directly convert necessary fields assuming clean data
+    data.forEach(d => {
+      d.pace = +d.Pace;
+      d.x3pa = +d["3PA"];
+      d.season = d.season?.trim(); // preserve the season label
+    });
 
-    const cleaned = data.map(d => {
-      const season = d.season ? d.season.trim() : "";
-      const pace = +d.Pace;
-      const x3pa = +d["3PA"];
-      if (!season || isNaN(pace) || isNaN(x3pa)) return null;
-
-      return {
-        seasonLabel: season,
-        seasonYear: +season.slice(0, 4),
-        pace,
-        x3pa
-      };
-    }).filter(d => d !== null);
-
-    console.log("Filtered data:", cleaned);
-
-    // Now you can safely use `cleaned` below:
     const xScale = d3.scaleLinear()
-      .domain(d3.extent(cleaned, d => d.pace))
+      .domain(d3.extent(data, d => d.pace))
       .nice()
       .range([margin.left, width - margin.right]);
 
     const yScale = d3.scaleLinear()
-      .domain(d3.extent(cleaned, d => d.x3pa))
+      .domain(d3.extent(data, d => d.x3pa))
       .nice()
       .range([height - margin.bottom, margin.top]);
 
@@ -582,7 +570,7 @@ function drawPaceVs3PAScatter() {
 
     // Scatter plot points
     svg.selectAll("circle")
-      .data(cleaned)
+      .data(data)
       .enter()
       .append("circle")
       .attr("cx", d => xScale(d.pace))
@@ -592,13 +580,13 @@ function drawPaceVs3PAScatter() {
 
     // Labels on each point
     svg.selectAll("text.label")
-      .data(cleaned)
+      .data(data)
       .enter()
       .append("text")
       .attr("class", "label")
       .attr("x", d => xScale(d.pace) + 5)
       .attr("y", d => yScale(d.x3pa) + 3)
-      .text(d => d.seasonLabel)
+      .text(d => d.season)
       .style("font-size", "10px")
       .style("fill", "#333");
 
