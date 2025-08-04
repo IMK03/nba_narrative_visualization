@@ -38,8 +38,8 @@ function showScene(sceneNum) {
   }
 
   if (sceneNum === 4) {
-    drawScene2ChartA();
-    d3.select("#scene-text").text("Players are playing more positions over time — the era of positionless basketball is here.");
+    drawPaceVs3PAScatter(); // scene 2 chart c
+    d3.select("#scene-text").text("Pace-and-space revolution: faster play, more threes.");
   }
 
   if (sceneNum === 5) {
@@ -48,8 +48,8 @@ function showScene(sceneNum) {
   }
 
   if (sceneNum === 6) {
-    drawPaceVs3PAScatter(); // scene 2 chart c
-    d3.select("#scene-text").text("Pace-and-space revolution: faster play, more threes.");
+    drawScene2ChartA();
+    d3.select("#scene-text").text("Players are playing more positions over time — the era of positionless basketball is here.");
   }
 
   if (sceneNum === 7) {
