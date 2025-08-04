@@ -545,14 +545,14 @@ function drawPaceVs3PAScatter() {
     data.forEach(d => {
       d.pace = +d.pace;
       d.x3pa = +d.x3pa;
-      d.Season = d.Season.trim(); // Make sure it's a string
+      d.season = d.season.trim(); // Make sure it's a string
     });
 
     const cleaned = data.filter(d =>
-      d.Season && !isNaN(d.pace) && !isNaN(d.x3pa)
+      d.season && !isNaN(d.pace) && !isNaN(d.x3pa)
     ).map(d => ({
-      seasonLabel: d.Season,               // keep original "2024-25"
-      seasonYear: +d.Season.slice(0, 4),   // extract 2024
+      seasonLabel: d.season,               // keep original "2024-25"
+      seasonYear: +d.season.slice(0, 4),   // extract 2024
       pace: +d.pace,
       x3pa: +d.x3pa
     }));
@@ -597,7 +597,7 @@ function drawPaceVs3PAScatter() {
       .attr("class", "label")
       .attr("x", d => xScale(d.pace) + 5)
       .attr("y", d => yScale(d.x3pa) + 3)
-      .text(d => d.Season)
+      .text(d => d.season)
       .style("font-size", "10px")
       .style("fill", "#333");
 
