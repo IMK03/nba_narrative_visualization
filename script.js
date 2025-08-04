@@ -639,6 +639,8 @@ function drawLeBronProfile() {
       { position: "C",  value: d3.mean(lebronPlay, d => d.c_percent) }
     ];
 
+    console.log("positionData:", positionData);
+
     const xA = d3.scaleBand()
       .domain(positionData.map(d => d.position))
       .range([60, 540])
