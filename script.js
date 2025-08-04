@@ -699,13 +699,13 @@ function drawLeBronProfile() {
         season: d.season,
         AST: d.ast_percent,
         TRB: d.trb_percent,
-        x3p_ar: d.x3p_ar,
-        ftr: d.f_tr,
+        "3PAr": d.x3p_ar * 100,
+        ftr: d.f_tr * 100,
         USG: d.usg_percent
       }))
       .sort((a, b) => a.season - b.season);
 
-    const metrics = ["AST", "TRB", "x3p_ar", "ftr", "USG"];
+    const metrics = ["AST", "TRB", "3PAr", "ftr", "USG"];
     const advColors = d3.schemeTableau10; // Use a different palette for clarity
 
     const svg2 = d3.select("#viz-container").append("svg")
