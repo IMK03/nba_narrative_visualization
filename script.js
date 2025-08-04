@@ -541,8 +541,12 @@ function drawPaceVs3PAScatter() {
     .attr("width", width)
     .attr("height", height);
 
-  d3.csv("data/pace3p.csv", d3.autoType).then(data => {
-    console.log("Raw data:", data.slice(0, 5));
+  d3.csv("data/pace3p.csv").then(data => {
+    data.forEach(d => {
+      d.Pace = +d.Pace;
+      d["3PA"] = +d["3PA"];
+      d.Season = d.Season.trim(); // Make sure it's a string
+    });
 
     const cleaned = data.filter(d =>
       d.Season && !isNaN(d.Pace) && !isNaN(d["3PA"])
