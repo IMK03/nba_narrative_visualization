@@ -623,6 +623,8 @@ function drawLeBronProfile() {
     // === FILTER DATA FOR LEBRON JAMES ===
     const lebronPlay = playByPlay.filter(d => d.Player === "LeBron James");
     const lebronAdvanced = advanced.filter(d => d.Player === "LeBron James");
+    console.log(lebronAdvanced[0]);
+
 
     // === CHART A: AVERAGE POSITION PERCENTAGES ===
     const svgA = d3.select("#viz-container").append("svg")
@@ -692,6 +694,8 @@ function drawLeBronProfile() {
     }))
     .filter(d => !isNaN(d.season)) // ensure season is valid
     .sort((a, b) => a.season - b.season);
+
+    console.log(statData[0]);
 
     const xB = d3.scaleLinear()
       .domain(d3.extent(statData, d => d.season))
