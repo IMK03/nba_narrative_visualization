@@ -438,84 +438,94 @@ function drawScene2ChartA() {
 }
 
 function drawAdvancedStatConvergence(data) {
-  const width = 900, height = 500;
-  const margin = { top: 50, right: 100, bottom: 50, left: 60 };
+  const width = 900, height = 400;
+  const margin = { top: 50, right: 200, bottom: 50, left: 60 };
 
+  const statsToShow = ["TRB", "AST", "USG"];
   const svg = d3.select("#viz-container").append("svg")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", statsToShow.length * height);
 
-  // Get unique stats
-  const stats = Array.from(new Set(data.map(d => d.stat)));
-  
-  // One chart per stat
-  stats.forEach((stat, i) => {
-    const statData = data.filter(d => d.stat === stat);
+  statsToShow.forEach((stat, i) => {
+    const statData = data.filter(d => d.stat.toUpperCase() === stat);
 
     const xScale = d3.scaleLinear()
       .domain(d3.extent(statData, d => d.year))
       .range([margin.left, width - margin.right]);
 
     const yScale = d3.scaleLinear()
-      .domain(d3.extent(statData, d => +d.value))
+      .domain(d3.extent(statData, d => d.value))
       .nice()
       .range([height - margin.bottom, margin.top]);
 
     const color = d3.scaleOrdinal(d3.schemeTableau10)
-      .domain(Array.from(new Set(statData.map(d => d.pos))));
+      .domain([...new Set(statData.map(d => d.pos))]);
 
     const line = d3.line()
       .x(d => xScale(d.year))
       .y(d => yScale(d.value));
 
-    const group = svg.append("g")
+    const chartGroup = svg.append("g")
       .attr("transform", `translate(0, ${i * height})`);
-
-    const statGroup = group.append("g");
 
     const positions = d3.group(statData, d => d.pos);
     positions.forEach((values, pos) => {
-      statGroup.append("path")
+      values.sort((a, b) => a.year - b.year);
+
+      chartGroup.append("path")
         .datum(values)
         .attr("fill", "none")
         .attr("stroke", color(pos))
         .attr("stroke-width", 2)
         .attr("d", line);
+
+      // Label at the end of the line
+      const last = values[values.length - 1];
+      chartGroup.append("text")
+        .attr("x", xScale(last.year) + 5)
+        .attr("y", yScale(last.value))
+        .text(pos)
+        .attr("fill", color(pos))
+        .style("font-size", "12px")
+        .attr("alignment-baseline", "middle");
     });
 
     // Axes
-    statGroup.append("g")
+    chartGroup.append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
       .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
 
-    statGroup.append("g")
+    chartGroup.append("g")
       .attr("transform", `translate(${margin.left},0)`)
       .call(d3.axisLeft(yScale));
 
-    // Label
-    statGroup.append("text")
+    // Chart title
+    chartGroup.append("text")
       .attr("x", width / 2)
       .attr("y", margin.top / 2)
       .attr("text-anchor", "middle")
       .style("font-size", "16px")
-      .text(stat + " by Position Over Time");
+      .text(`${stat}% by Position Over Time`);
   });
 }
+
 
 function drawScene2ChartB() {
   d3.csv("data/advanced filtered.csv").then(data => {
     data.forEach(d => {
       d.year = +d.season;
       d.value = +d.value;
+      d.stat = d.stat.toUpperCase();  // normalize stat casing
     });
-    console.log("Scene 2B data:", data);
+
     const cleaned = data.filter(d =>
-    d.stat && d.pos && !isNaN(d.year) && !isNaN(d.value)
+      d.stat && d.pos && !isNaN(d.year) && !isNaN(d.value) &&
+      ["TRB", "AST", "USG"].includes(d.stat)
     );
-    console.log("Scene 2B cleaned:", cleaned);
     drawAdvancedStatConvergence(cleaned);
   });
 }
+
 
 
 function drawScene2ChartC() {
