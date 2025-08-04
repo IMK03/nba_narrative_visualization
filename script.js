@@ -505,7 +505,7 @@ function drawAdvancedStatConvergence(data) {
 function drawScene2ChartB() {
   d3.csv("data/advanced filtered.csv").then(data => {
     data.forEach(d => {
-      d.year = +d.year;
+      d.year = +d.season;
       d.value = +d.value;
     });
     console.log("Scene 2B data:", data);
