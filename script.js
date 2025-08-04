@@ -619,7 +619,7 @@ function drawLeBronProfile() {
     const lebronSeasons = data
       .filter(d => d.Player === "LeBron James")
       .map(d => ({
-        season: +d.Season.split("-")[0],  // "2015-16" → 2015
+        season: +d.season.split("-")[0],  // "2015-16" → 2015
         PG: d.pg_percent,
         SG: d.sg_percent,
         SF: d.sf_percent,
