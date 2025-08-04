@@ -543,30 +543,30 @@ function drawPaceVs3PAScatter() {
 
   d3.csv("data/pace3p.csv").then(data => {
     data.forEach(d => {
-      d.Pace = +d.Pace;
-      d["3PA"] = +d["3PA"];
+      d.pace = +d.pace;
+      d.x3pa = +d.x3pa;
       d.Season = d.Season.trim(); // Make sure it's a string
     });
 
     const cleaned = data.filter(d =>
-      d.Season && !isNaN(d.Pace) && !isNaN(d["3PA"])
+      d.Season && !isNaN(d.pace) && !isNaN(d.x3pa)
     ).map(d => ({
       seasonLabel: d.Season,               // keep original "2024-25"
       seasonYear: +d.Season.slice(0, 4),   // extract 2024
-      pace: +d.Pace,
-      x3pa: +d["3PA"]
+      pace: +d.pace,
+      x3pa: +d.x3pa
     }));
 
 
     console.log("Filtered data:", cleaned);
 
     const xScale = d3.scaleLinear()
-      .domain(d3.extent(cleaned, d => d.Pace))
+      .domain(d3.extent(cleaned, d => d.pace))
       .nice()
       .range([margin.left, width - margin.right]);
 
     const yScale = d3.scaleLinear()
-      .domain(d3.extent(cleaned, d => d["3PA"]))
+      .domain(d3.extent(cleaned, d => d.x3pa))
       .nice()
       .range([height - margin.bottom, margin.top]);
 
@@ -584,8 +584,8 @@ function drawPaceVs3PAScatter() {
       .data(cleaned)
       .enter()
       .append("circle")
-      .attr("cx", d => xScale(d.Pace))
-      .attr("cy", d => yScale(d["3PA"]))
+      .attr("cx", d => xScale(d.pace))
+      .attr("cy", d => yScale(d.x3pa))
       .attr("r", 4)
       .attr("fill", "steelblue");
 
@@ -595,8 +595,8 @@ function drawPaceVs3PAScatter() {
       .enter()
       .append("text")
       .attr("class", "label")
-      .attr("x", d => xScale(d.Pace) + 5)
-      .attr("y", d => yScale(d["3PA"]) + 3)
+      .attr("x", d => xScale(d.pace) + 5)
+      .attr("y", d => yScale(d.x3pa) + 3)
       .text(d => d.Season)
       .style("font-size", "10px")
       .style("fill", "#333");
