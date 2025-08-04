@@ -705,7 +705,7 @@ function drawLeBronProfile() {
       }))
       .sort((a, b) => a.season - b.season);
 
-    const metrics = ["AST", "TRB", "3PAr", "FTr", "USG"];
+    const metrics = ["AST", "TRB", "x3p_ar", "ftr", "USG"];
     const advColors = d3.schemeTableau10; // Use a different palette for clarity
 
     const svg2 = d3.select("#viz-container").append("svg")
