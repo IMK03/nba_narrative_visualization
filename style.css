@@ -7,6 +7,9 @@ h1 {
   text-align: center;
 }
 #viz-container {
-  width: 90%;
-  margin: auto;
+  display: flex;
+  flex-direction: column; /* STACKS CHARTS VERTICALLY */
+  align-items: center;     /* centers them horizontally */
+  gap: 40px;               /* spacing between charts */
+  margin-bottom: 20px;
 }
