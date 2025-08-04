@@ -614,7 +614,7 @@ function drawPaceVs3PAScatter() {
   });
 }
 
-function drawLeBronPositionLines() {
+function drawLeBronProfile() {
   d3.csv("data/Player Play By Play.csv", d3.autoType).then(data => {
     const lebronSeasons = data
       .filter(d => d.Player === "LeBron James")
