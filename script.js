@@ -54,6 +54,7 @@ function showScene(sceneNum) {
 
   if (sceneNum === 7) {
     drawLeBronProfile();
+    drawLeBronAdvancedStats();
     d3.select("#scene-text").text("LeBron James is one of the best examples of the modern positionless NBA.");
   }
 }
@@ -615,7 +616,6 @@ function drawPaceVs3PAScatter() {
 }
 function drawLeBronProfile() {
   d3.csv("data/Player Play By Play.csv", d3.autoType).then(data => {
-    // Filter for LeBron James and normalize position percentages per season
     const lebronSeasons = data
       .filter(d => d.player === "LeBron James")
       .map(d => {
@@ -638,7 +638,7 @@ function drawLeBronProfile() {
     const height = 450;
     const margin = { top: 50, right: 150, bottom: 50, left: 60 };
 
-    const svg = d3.select("#viz-container").append("svg")
+    const svg = d3.select("#profile-chart").append("svg")
       .attr("width", width)
       .attr("height", height);
 
@@ -650,7 +650,6 @@ function drawLeBronProfile() {
       .domain([0, 1])
       .range([height - margin.bottom, margin.top]);
 
-    // Axes
     svg.append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
       .call(d3.axisBottom(x).tickFormat(d3.format("d")));
@@ -659,13 +658,11 @@ function drawLeBronProfile() {
       .attr("transform", `translate(${margin.left},0)`)
       .call(d3.axisLeft(y).tickFormat(d3.format(".0%")));
 
-    // Line generator function
     const line = pos =>
       d3.line()
         .x(d => x(d.season))
         .y(d => y(d[pos]));
 
-    // Draw lines for each position
     positions.forEach((pos, i) => {
       svg.append("path")
         .datum(lebronSeasons)
@@ -674,7 +671,6 @@ function drawLeBronProfile() {
         .attr("stroke-width", 2)
         .attr("d", line(pos));
 
-      // Add text label at the last season's data point
       const last = lebronSeasons[lebronSeasons.length - 1];
       svg.append("text")
         .attr("x", x(last.season) + 5)
@@ -685,7 +681,6 @@ function drawLeBronProfile() {
         .attr("alignment-baseline", "middle");
     });
 
-    // Chart title
     svg.append("text")
       .attr("x", width / 2)
       .attr("y", margin.top / 2)
@@ -693,9 +688,10 @@ function drawLeBronProfile() {
       .style("font-size", "16px")
       .text("LeBron James – Normalized Position Percentages by Season");
   });
+}
 
+function drawLeBronAdvancedStats() {
   d3.csv("data/Advanced.csv", d3.autoType).then(data => {
-    // Filter for LeBron James
     const lebronStats = data
       .filter(d => d.player === "LeBron James")
       .map(d => ({
@@ -709,13 +705,13 @@ function drawLeBronProfile() {
       .sort((a, b) => a.season - b.season);
 
     const metrics = ["AST", "TRB", "3PAr", "FTr", "USG"];
-    const colors = d3.schemeCategory10;
+    const colors = d3.schemeTableau10; // Different color set
 
     const width = 850;
     const height = 450;
     const margin = { top: 50, right: 150, bottom: 50, left: 60 };
 
-    const svg = d3.select("#viz-container").append("svg")
+    const svg = d3.select("#advanced-chart").append("svg")
       .attr("width", width)
       .attr("height", height);
 
@@ -726,14 +722,11 @@ function drawLeBronProfile() {
     const y = d3.scaleLinear()
       .domain([
         0,
-        d3.max(lebronStats, d =>
-          d3.max(metrics, key => d[key])
-        )
+        d3.max(lebronStats, d => d3.max(metrics, key => d[key]))
       ])
       .nice()
       .range([height - margin.bottom, margin.top]);
 
-    // Axes
     svg.append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
       .call(d3.axisBottom(x).tickFormat(d3.format("d")));
@@ -742,13 +735,11 @@ function drawLeBronProfile() {
       .attr("transform", `translate(${margin.left},0)`)
       .call(d3.axisLeft(y));
 
-    // Line generator function
     const line = key =>
       d3.line()
         .x(d => x(d.season))
         .y(d => y(d[key]));
 
-    // Draw lines
     metrics.forEach((key, i) => {
       svg.append("path")
         .datum(lebronStats)
@@ -757,7 +748,6 @@ function drawLeBronProfile() {
         .attr("stroke-width", 2)
         .attr("d", line(key));
 
-      // Add label
       const last = lebronStats[lebronStats.length - 1];
       svg.append("text")
         .attr("x", x(last.season) + 5)
@@ -768,7 +758,6 @@ function drawLeBronProfile() {
         .attr("alignment-baseline", "middle");
     });
 
-    // Chart title
     svg.append("text")
       .attr("x", width / 2)
       .attr("y", margin.top / 2)
