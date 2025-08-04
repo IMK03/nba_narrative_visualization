@@ -548,23 +548,19 @@ function drawPaceVs3PAScatter() {
       const season = d.season ? d.season.trim() : "";
       const pace = +d.Pace;
       const x3pa = +d["3PA"];
-
       if (!season || isNaN(pace) || isNaN(x3pa)) return null;
 
       return {
-        seasonLabel: season,               // keep original "2024-25"
-        seasonYear: +season.slice(0, 4),   // extract 2024
-        pace: pace,
-        x3pa: x3pa
+        seasonLabel: season,
+        seasonYear: +season.slice(0, 4),
+        pace,
+        x3pa
       };
     }).filter(d => d !== null);
 
     console.log("Filtered data:", cleaned);
-    });
 
-
-    console.log("Filtered data:", cleaned);
-
+    // Now you can safely use `cleaned` below:
     const xScale = d3.scaleLinear()
       .domain(d3.extent(cleaned, d => d.pace))
       .nice()
@@ -576,17 +572,15 @@ function drawPaceVs3PAScatter() {
       .range([height - margin.bottom, margin.top]);
 
     // Axes
-    // X-axis
     svg.append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
       .call(d3.axisBottom(xScale));
 
-    // Y-axis
     svg.append("g")
       .attr("transform", `translate(${margin.left},0)`)
       .call(d3.axisLeft(yScale));
 
-    // Points
+    // Scatter plot points
     svg.selectAll("circle")
       .data(cleaned)
       .enter()
@@ -596,7 +590,7 @@ function drawPaceVs3PAScatter() {
       .attr("r", 4)
       .attr("fill", "steelblue");
 
-    // Labels for each point
+    // Labels on each point
     svg.selectAll("text.label")
       .data(cleaned)
       .enter()
@@ -604,7 +598,7 @@ function drawPaceVs3PAScatter() {
       .attr("class", "label")
       .attr("x", d => xScale(d.pace) + 5)
       .attr("y", d => yScale(d.x3pa) + 3)
-      .text(d => d.season)
+      .text(d => d.seasonLabel)
       .style("font-size", "10px")
       .style("fill", "#333");
 
@@ -622,14 +616,16 @@ function drawPaceVs3PAScatter() {
       .attr("text-anchor", "middle")
       .text("3PA per Game");
 
-    // Chart title
+    // Title
     svg.append("text")
       .attr("x", width / 2)
       .attr("y", margin.top / 2)
       .attr("text-anchor", "middle")
       .style("font-size", "18px")
       .text("League Pace vs 3PA per Game (Scatter Plot)");
-  };
+  });
+}
+
 function drawLeBronProfile() {
   Promise.all([
     d3.csv("data/Player Play By Play.csv", d3.autoType),
