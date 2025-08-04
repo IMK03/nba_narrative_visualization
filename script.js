@@ -629,7 +629,7 @@ function drawLeBronProfile() {
   // Load both CSVs
   Promise.all([
     d3.csv("data/Player Play By Play.csv", d3.autoType),
-    d3.csv("data/Player Advanced.csv", d3.autoType)
+    d3.csv("data/Advanced.csv", d3.autoType)
   ]).then(([playByPlay, advanced]) => {
     // Filter data for LeBron James
     const lebronPlay = playByPlay.filter(d => d.Player === "LeBron James");
