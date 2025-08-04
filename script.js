@@ -542,6 +542,7 @@ function drawPaceVs3PAScatter() {
     .attr("height", height);
 
   d3.csv("data/pace3p.csv").then(data => {
+    console.log("Raw data:", data);
     data.forEach(d => {
       d.pace = +d.pace;
       d.x3pa = +d.x3pa;
