@@ -545,7 +545,7 @@ function drawPaceVs3PAScatter() {
     data.forEach(d => {
       d.pace = +d.pace;
       d.x3pa = +d.x3pa;
-      d.season = d.season.trim(); // Make sure it's a string
+      d.season = d.season ? d.season.trim() : "";
     });
 
     const cleaned = data.filter(d =>
