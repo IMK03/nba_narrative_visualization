@@ -39,7 +39,7 @@ function showScene(sceneNum) {
 
   if (sceneNum === 4) {
     drawPaceVs3PAScatter(); // scene 2 chart c
-    d3.select("#scene-text").text("Pace-and-space revolution: faster play, more threes.");
+    d3.select("#scene-text").text("Pace-and-space revolution: faster play, more threes in the 2010s and 2020s.");
   }
 
   if (sceneNum === 5) {
