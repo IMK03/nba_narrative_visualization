@@ -693,4 +693,87 @@ function drawLeBronProfile() {
       .style("font-size", "16px")
       .text("LeBron James – Normalized Position Percentages by Season");
   });
+
+  d3.csv("data/Advanced.csv", d3.autoType).then(data => {
+    // Filter for LeBron James
+    const lebronStats = data
+      .filter(d => d.player === "LeBron James")
+      .map(d => ({
+        season: d.season,
+        AST: d.ast_percent,
+        TRB: d.trb_percent,
+        "3PAr": d.x3p_ar,
+        FTr: d.f_tr,
+        USG: d.usg_percent
+      }))
+      .sort((a, b) => a.season - b.season);
+
+    const metrics = ["AST", "TRB", "3PAr", "FTr", "USG"];
+    const colors = d3.schemeCategory10;
+
+    const width = 850;
+    const height = 450;
+    const margin = { top: 50, right: 150, bottom: 50, left: 60 };
+
+    const svg = d3.select("#viz-container").append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    const x = d3.scaleLinear()
+      .domain(d3.extent(lebronStats, d => d.season))
+      .range([margin.left, width - margin.right]);
+
+    const y = d3.scaleLinear()
+      .domain([
+        0,
+        d3.max(lebronStats, d =>
+          d3.max(metrics, key => d[key])
+        )
+      ])
+      .nice()
+      .range([height - margin.bottom, margin.top]);
+
+    // Axes
+    svg.append("g")
+      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(x).tickFormat(d3.format("d")));
+
+    svg.append("g")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y));
+
+    // Line generator function
+    const line = key =>
+      d3.line()
+        .x(d => x(d.season))
+        .y(d => y(d[key]));
+
+    // Draw lines
+    metrics.forEach((key, i) => {
+      svg.append("path")
+        .datum(lebronStats)
+        .attr("fill", "none")
+        .attr("stroke", colors[i])
+        .attr("stroke-width", 2)
+        .attr("d", line(key));
+
+      // Add label
+      const last = lebronStats[lebronStats.length - 1];
+      svg.append("text")
+        .attr("x", x(last.season) + 5)
+        .attr("y", y(last[key]))
+        .text(key)
+        .style("fill", colors[i])
+        .style("font-size", "12px")
+        .attr("alignment-baseline", "middle");
+    });
+
+    // Chart title
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", margin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .text("LeBron James – Advanced Stats by Season");
+  });
 }
