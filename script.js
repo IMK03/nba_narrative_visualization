@@ -341,50 +341,82 @@ function drawLineChart2(data) {
     .attr("x", 20).attr("y", 37).text("Position SD");
 }
 
-  function drawPosFluidityChart(data) {
-    const width = 900, height = 500;
-    const margin = { top: 50, right: 100, bottom: 50, left: 60 };
+function drawPosFluidityChart(data) {
+  const width = 900, height = 500;
+  const margin = { top: 50, right: 200, bottom: 50, left: 60 }; // increased right margin for labels
 
-    const svg = d3.select("#viz-container").append("svg")
-      .attr("width", width)
-      .attr("height", height);
+  const svg = d3.select("#viz-container").append("svg")
+    .attr("width", width)
+    .attr("height", height);
 
-    const xScale = d3.scaleLinear()
-      .domain(d3.extent(data, d => d.year))
-      .range([margin.left, width - margin.right]);
+  const xScale = d3.scaleLinear()
+    .domain(d3.extent(data, d => d.year))
+    .range([margin.left, width - margin.right]);
 
-    const yScale = d3.scaleLinear()
-      .domain([
-        d3.min(data, d => Math.min(d.avg_pos, d.sd_pos)) - 0.1,
-        d3.max(data, d => Math.max(d.avg_pos, d.sd_pos)) + 0.1
-      ])
-      .range([height - margin.bottom, margin.top]);
+  const yScale = d3.scaleLinear()
+    .domain([
+      d3.min(data, d => Math.min(d.avg_pos, d.sd_pos)) - 0.1,
+      d3.max(data, d => Math.max(d.avg_pos, d.sd_pos)) + 0.1
+    ])
+    .range([height - margin.bottom, margin.top]);
 
-    const avgLine = d3.line().x(d => xScale(d.year)).y(d => yScale(d.avg_pos));
-    const sdLine = d3.line().x(d => xScale(d.year)).y(d => yScale(d.sd_pos));
+  const avgLine = d3.line()
+    .x(d => xScale(d.year))
+    .y(d => yScale(d.avg_pos));
 
-    svg.append("path").datum(data)
-      .attr("fill", "none").attr("stroke", "steelblue").attr("stroke-width", 2).attr("d", avgLine);
-  
-    svg.append("path").datum(data)
-      .attr("fill", "none").attr("stroke", "tomato").attr("stroke-width", 2).attr("d", sdLine);
+  const sdLine = d3.line()
+    .x(d => xScale(d.year))
+    .y(d => yScale(d.sd_pos));
 
-    svg.append("g")
-      .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
-  
-    svg.append("g")
-      .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(yScale));
+  // Draw lines
+  svg.append("path").datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "steelblue")
+    .attr("stroke-width", 2)
+    .attr("d", avgLine);
 
-    svg.append("text")
-      .attr("x", width / 2)
-      .attr("y", 30)
-      .attr("text-anchor", "middle")
-      .style("font-size", "18px")
-      .text("Average Position & Std Dev Over Time (1997–2025)");
-  }
+  svg.append("path").datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "tomato")
+    .attr("stroke-width", 2)
+    .attr("d", sdLine);
 
+  // Add line labels at end of lines
+  const lastPoint = data[data.length - 1];
+
+  svg.append("text")
+    .attr("x", xScale(lastPoint.year) + 5)
+    .attr("y", yScale(lastPoint.avg_pos))
+    .text("Average Number of Positions Played")
+    .attr("fill", "steelblue")
+    .style("font-size", "12px")
+    .attr("alignment-baseline", "middle");
+
+  svg.append("text")
+    .attr("x", xScale(lastPoint.year) + 5)
+    .attr("y", yScale(lastPoint.sd_pos))
+    .text("Standard Deviation Multiple Position Share")
+    .attr("fill", "tomato")
+    .style("font-size", "12px")
+    .attr("alignment-baseline", "middle");
+
+  // Axes
+  svg.append("g")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
+
+  svg.append("g")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(d3.axisLeft(yScale));
+
+  // Chart title
+  svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", 30)
+    .attr("text-anchor", "middle")
+    .style("font-size", "18px")
+    .text("Average Position & Std Dev Over Time (1997–2025)");
+}
 
 // Scene 2 Chart A (use drawLineChart2 with custom y-axis scale & label)
 function drawScene2ChartA() {
