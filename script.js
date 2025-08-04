@@ -560,7 +560,7 @@ function drawPaceVs3PAScatter() {
     }).filter(d => d !== null);
 
     console.log("Filtered data:", cleaned);
-    }));
+    });
 
 
     console.log("Filtered data:", cleaned);
